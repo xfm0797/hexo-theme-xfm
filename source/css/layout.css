@@ -603,6 +603,33 @@ body.mode-blog .content-wrap {
   border-left: 0;
 }
 
+/* 多层文档树：逐级缩进，层级越深字号越收敛 */
+.xfm-nav-list.depth-2 {
+  padding-left: 11px;
+}
+
+.xfm-nav-list.depth-3 {
+  padding-left: 10px;
+  border-left-style: dashed;
+}
+
+.xfm-nav-list.depth-4,
+.xfm-nav-list.depth-5 {
+  padding-left: 10px;
+  border-left-style: dashed;
+}
+
+.xfm-nav-list.depth-3 > .xfm-nav-item > .xfm-nav-link,
+.xfm-nav-list.depth-4 > .xfm-nav-item > .xfm-nav-link,
+.xfm-nav-list.depth-5 > .xfm-nav-item > .xfm-nav-link {
+  padding: 6px 10px;
+  font-size: 12.8px;
+}
+
+.xfm-nav-list.depth-2 > .xfm-nav-item > .xfm-nav-link {
+  padding: 7px 10px;
+}
+
 .xfm-nav-item {
   position: relative;
 }

@@ -80,13 +80,13 @@
         <span class="nav-label"><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-left"></use></svg><%= __('docs.prev_page') %></span>
         <span class="nav-title"><%= pagerPrev.title %></span>
       </a>
-      <% } else { %><span class="post-nav-item is-empty"></span><% } %>
+      <% } else { %><span class="post-nav-item is-empty is-blank" aria-hidden="true"></span><% } %>
       <% if (pagerNext) { %>
       <a class="post-nav-item is-next" href="<%= url_for(pagerNext.path) %>">
         <span class="nav-label"><%= __('docs.next_page') %><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-right"></use></svg></span>
         <span class="nav-title"><%= pagerNext.title %></span>
       </a>
-      <% } else { %><span class="post-nav-item is-empty"></span><% } %>
+      <% } else { %><span class="post-nav-item is-empty is-blank" aria-hidden="true"></span><% } %>
     </nav>
     <% } %>
   </div>

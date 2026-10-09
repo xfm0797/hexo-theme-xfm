@@ -2,6 +2,20 @@
   const menu = theme.menu || {};
   const navEnable = !(theme.navbar && theme.navbar.enable === false);
   const showTitle = !(theme.appearance && theme.appearance.site_title === false);
+
+  // 菜单里是否已经有指向归档的项，避免笔记模式重复追加
+  const norm = function (p) { return String(p || '').replace(/\/+$/, '') || '/'; };
+  const menuHasArchive = Object.keys(menu).some(function (k) {
+    const it = menu[k] || {};
+    if (it.path && norm(it.path) === '/archives') return true;
+    if (it.children) {
+      return Object.keys(it.children).some(function (sk) {
+        const sub = it.children[sk] || {};
+        return sub.path && norm(sub.path) === '/archives';
+      });
+    }
+    return false;
+  });
 %>
 <% if (navEnable) { %>
 <header class="site-header<%= (theme.appearance && theme.appearance.glass_navbar) ? ' is-glass' : '' %>" id="siteHeader">
@@ -66,7 +80,7 @@
         </li>
         <% }); %>
 
-        <% if (theme.mode === 'notes') { %>
+        <% if (theme.mode === 'notes' && !menuHasArchive) { %>
         <li class="nav-item">
           <a class="nav-link" href="<%= url_for('/archives/') %>">
             <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-archive"></use></svg><span><%= __('common.archives') %></span>

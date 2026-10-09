@@ -877,6 +877,12 @@ a.post-nav-item:hover {
   opacity: 0.45;
 }
 
+/* 空占位：保留网格位次以便另一侧对齐，但不渲染可见卡片 */
+.post-nav-item.is-blank {
+  visibility: hidden;
+  box-shadow: none;
+}
+
 .nav-label {
   display: inline-flex;
   align-items: center;

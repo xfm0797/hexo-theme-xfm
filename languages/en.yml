@@ -33,7 +33,7 @@ search:
   hint_suffix: to search
   searching: Searching…
   no_input: Type something to start searching
-  result_count: '%s results found'
+  result_count: '{count} results found'
   no_result: Nothing matched. Try another keyword.
   tips_up_down: Navigate
   tips_enter: Open

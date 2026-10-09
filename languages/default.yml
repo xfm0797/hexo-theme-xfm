@@ -34,7 +34,7 @@ search:
   hint_suffix: 打开搜索框
   searching: 正在检索…
   no_input: 输入关键词开始搜索
-  result_count: 找到 %s 条结果
+  result_count: 找到 {count} 条结果
   no_result: 没有匹配的内容，换个关键词试试
   tips_up_down: 上下键选择
   tips_enter: 回车打开

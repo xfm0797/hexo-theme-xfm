@@ -164,7 +164,7 @@
     }
 
     var html = '<div class="search-result-group">' +
-      (I18N.resultCount || '共找到 %s 条结果').replace('%s', list.length) + '</div>';
+      (I18N.resultCount || '共找到 {count} 条结果').replace('{count}', list.length) + '</div>';
 
     list.forEach(function (item) {
       var summary = '';

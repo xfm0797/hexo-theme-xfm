@@ -16,7 +16,7 @@
 %>
 <div class="page-head">
   <h1 class="page-title"><%= __('archive.title') %></h1>
-  <p class="page-subtitle"><%= __('archive.total_posts').replace('%s', posts.length) %></p>
+  <p class="page-subtitle"><%= __('archive.total_posts', posts.length) %></p>
 </div>
 
 <% if (groupStyle) { %>
