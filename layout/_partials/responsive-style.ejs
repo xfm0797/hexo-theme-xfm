@@ -1,0 +1,395 @@
+<%
+  /*
+   * 响应式样式生成器
+   * 把 _config.yml 中 responsive 一节翻译成真实的 @media 规则。
+   * 这样断点、侧栏行为、触摸尺寸等都不必改模板，只改配置即可。
+   */
+  const R = xfm_breakpoints();
+  const enabled = R.enable;
+  const bp = R.breakpoints;
+  const sideMode = R.mobile_sidebar;
+  const tocMode = R.mobile_toc;
+  const fluid = R.fluid_typography;
+  const safeArea = R.safe_area;
+  const compact = R.compact_height;
+  const touch = R.touch_target;
+
+  const containerW = R.container_width;
+  const contentW = R.content_width;
+
+  const fwMin = R.fluid_min_width;
+  const fwMax = R.fluid_max_width;
+
+  /* 流式字号：在两个宽度之间线性插值，输出 clamp(min, calc(a rem + b vw), max) */
+  function fluidCLAMP(from, to) {
+    const slope = (to - from) / (fwMax - fwMin);
+    const intercept = (from - slope * fwMin) / 16;
+    return (
+      'clamp(' + from + 'px, ' +
+      intercept.toFixed(4).replace(/0+$/, '').replace(/\.$/, '') + 'rem + ' +
+      (slope * 100).toFixed(3).replace(/0+$/, '').replace(/\.$/, '') + 'vw, ' +
+      to + 'px)'
+    );
+  }
+
+  const out = [];
+  out.push('/* XFM · 响应式（由 responsive 配置生成） */');
+
+  if (!enabled) {
+    out.push('/* 响应式已关闭：始终保持桌面布局 */');
+  } else {
+    /* ---------------------------------------------------------------- *
+     * 容器宽度覆写
+     * ---------------------------------------------------------------- */
+    if (containerW || contentW) {
+      out.push(':root {');
+      if (containerW) out.push('  --page-max: ' + containerW + 'px;');
+      if (contentW) out.push('  --content-max: ' + contentW + 'px;');
+      out.push('}');
+    }
+
+    /* ---------------------------------------------------------------- *
+     * 流式字号
+     * ---------------------------------------------------------------- */
+    if (fluid) {
+      out.push(':root {');
+      out.push('  --fs-base: ' + fluidCLAMP(14.5, 16) + ';');
+      out.push('  --fs-md: ' + fluidCLAMP(15.5, 17) + ';');
+      out.push('  --fs-lg: ' + fluidCLAMP(17, 19) + ';');
+      out.push('  --fs-xl: ' + fluidCLAMP(20, 24) + ';');
+      out.push('  --fs-2xl: ' + fluidCLAMP(24, 30) + ';');
+      out.push('  --fs-3xl: ' + fluidCLAMP(28, 36) + ';');
+      out.push('}');
+      out.push('.post-view-title, .page-view-title {');
+      out.push('  font-size: ' + fluidCLAMP(24, 34) + ';');
+      out.push('}');
+    }
+
+    /* ---------------------------------------------------------------- *
+     * ≥ xxl：超宽屏放宽，避免两侧留白过多
+     * ---------------------------------------------------------------- */
+    out.push('@media (min-width: ' + (bp.xxl + 1) + 'px) {');
+    out.push('  :root {');
+    out.push('    --page-max: 1440px;');
+    out.push('    --content-max: 840px;');
+    out.push('    --nav-w: 300px;');
+    out.push('    --toc-w: 264px;');
+    out.push('    --widget-w: 312px;');
+    out.push('    --gap: 32px;');
+    out.push('  }');
+    out.push('}');
+
+    /* ---------------------------------------------------------------- *
+     * ≤ xl：收紧间距
+     * ---------------------------------------------------------------- */
+    out.push('@media (max-width: ' + bp.xl + 'px) {');
+    out.push('  :root {');
+    out.push('    --gap: 22px;');
+    out.push('    --nav-w: 256px;');
+    out.push('    --toc-w: 220px;');
+    out.push('    --widget-w: 268px;');
+    out.push('  }');
+    out.push('}');
+
+    /* ---------------------------------------------------------------- *
+     * ≤ lg：主导航折叠为抽屉，文档 / 笔记侧栏离开固定定位
+     * ---------------------------------------------------------------- */
+    out.push('@media (max-width: ' + bp.lg + 'px) {');
+    out.push('  .nav-menu { display: none; }');
+    out.push('  .nav-toggle { display: inline-grid; }');
+    out.push('  body.mode-notes .site-body,');
+    out.push('  body.mode-docs .site-body,');
+    out.push('  body.mode-notes.has-inline-toc .site-body,');
+    out.push('  body.mode-docs.has-inline-toc .site-body {');
+    out.push('    grid-template-columns: minmax(0, 1fr);');
+    out.push('  }');
+    out.push('  /* 多栏转单栏后，原先固定定位的侧栏改为内联卡片置于正文上方 */');
+    out.push('  .site-nav {');
+    out.push('    position: static;');
+    out.push('    max-height: none;');
+    out.push('    order: -1;');
+    out.push('    padding: 16px 18px;');
+    out.push('    background: var(--c-surface);');
+    out.push('    border: 1px solid var(--c-border);');
+    out.push('    border-radius: var(--xfm-radius-lg);');
+    out.push('    box-shadow: var(--shadow-xs);');
+    out.push('  }');
+    out.push('  .site-nav .site-nav-inner { max-height: 280px; }');
+    out.push('  .toc-column { display: none; }');
+    out.push('}');
+
+    /* ---------------------------------------------------------------- *
+     * ≤ md：侧边挂件回落到正文下方，双列封面卡片转纵向
+     * ---------------------------------------------------------------- */
+    out.push('@media (max-width: ' + bp.md + 'px) {');
+    out.push('  body.has-sidebar.sidebar-right .site-body,');
+    out.push('  body.has-sidebar.sidebar-left .site-body {');
+    out.push('    grid-template-columns: minmax(0, 1fr);');
+    out.push('  }');
+    out.push('  body.has-sidebar.sidebar-left .content-column,');
+    out.push('  body.has-sidebar.sidebar-left .widget-column { order: 0; }');
+    out.push('  .widget-column {');
+    out.push('    position: static;');
+    out.push('    max-height: none;');
+    out.push('    overflow: visible;');
+    out.push('  }');
+    out.push('  .post-card.has-cover { flex-direction: column; }');
+    out.push('  .post-card.has-cover .post-cover {');
+    out.push('    width: 100%;');
+    out.push('    max-width: none;');
+    out.push('    aspect-ratio: 16 / 9;');
+    out.push('  }');
+    out.push('  .post-card.has-cover.is-flip .post-cover { order: 0; }');
+    out.push('  .post-card.has-cover .post-cover img { min-height: 0; height: 100%; }');
+    out.push('  .hero-stats { width: 100%; }');
+    out.push('  .hero-stat { flex: 1 1 0; min-width: 0; }');
+    out.push('  .toc-column { display: none; }');
+    out.push('}');
+
+    /* ---------------------------------------------------------------- *
+     * ≤ sm：移动端单栏
+     * ---------------------------------------------------------------- */
+    const sm = [];
+    sm.push('  :root {');
+    sm.push('    --gutter: 16px;');
+    sm.push('    --gap: 18px;');
+    sm.push('    --xfm-nav-h: 56px;');
+    sm.push('  }');
+    sm.push('  .search-trigger .kbd-hint { display: none; }');
+    sm.push('  .hero-title { font-size: 22px; }');
+    sm.push('  .post-title { font-size: 17.5px; }');
+    if (!fluid) {
+      sm.push('  .post-view-title { font-size: 24px; }');
+      sm.push('  .page-view-title { font-size: 25px; }');
+    }
+    sm.push('  .hero-panel { padding: 24px 20px; }');
+    sm.push('  .hero-content { flex-direction: column; align-items: flex-start; }');
+    sm.push('  .hero-avatar { width: 54px; height: 54px; }');
+    sm.push('  .post-card { border-radius: var(--xfm-radius); }');
+    sm.push('  .post-card.has-cover .post-body,');
+    sm.push('  .post-body { padding: 18px 18px 20px; }');
+    sm.push('  .post-view, .page-view {');
+    sm.push('    padding: 22px 18px 24px;');
+    sm.push('    border-radius: var(--xfm-radius);');
+    sm.push('  }');
+    sm.push('  .post-cover-hero {');
+    sm.push('    margin: -22px -18px 20px;');
+    sm.push('    aspect-ratio: 16 / 10;');
+    sm.push('    min-height: 180px;');
+    sm.push('    border-radius: var(--xfm-radius) var(--xfm-radius) 0 0;');
+    sm.push('  }');
+    sm.push('  .cover-hero-inner { padding: 18px; }');
+    sm.push('  .post-view-meta { gap: 6px 12px; font-size: 12.5px; }');
+    sm.push('  .post-nav { grid-template-columns: 1fr; }');
+    sm.push('  .post-nav-item.is-next { text-align: left; align-items: flex-start; }');
+    sm.push('  .related-grid, .links-grid, .post-layout-grid { grid-template-columns: 1fr; }');
+    sm.push('  .category-cloud { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }');
+    sm.push('  .xfm-row { grid-template-columns: 1fr; }');
+    sm.push('  .xfm-col, .xfm-row > .xfm-col:not([style]) { grid-column: span 12; }');
+    sm.push('  .archive-item { flex-wrap: wrap; gap: 4px 10px; }');
+    sm.push('  .archive-title { flex-basis: 100%; order: 2; white-space: normal; }');
+    sm.push('  .post-layout-list .post-card {');
+    sm.push('    flex-direction: column;');
+    sm.push('    align-items: stretch;');
+    sm.push('    gap: 8px;');
+    sm.push('    padding: 14px 16px;');
+    sm.push('  }');
+    sm.push('  .post-layout-list .post-body {');
+    sm.push('    flex-direction: column;');
+    sm.push('    align-items: flex-start;');
+    sm.push('    gap: 6px;');
+    sm.push('  }');
+    sm.push('  .post-layout-list .post-title { order: 0; flex: 1 1 auto; }');
+    sm.push('  .post-layout-list .post-stat { margin-left: 0; }');
+    sm.push('  .error-404 { padding-top: 40px; }');
+    sm.push('  .search-modal { padding: 0; }');
+    sm.push('  .search-panel {');
+    sm.push('    max-height: 100vh;');
+    sm.push('    height: 100vh;');
+    sm.push('    border-radius: 0;');
+    sm.push('    border: 0;');
+    sm.push('  }');
+    sm.push('  .xfm-content blockquote { padding: 0.85em 1em; }');
+    sm.push('  .footer-main { flex-direction: column; align-items: flex-start; }');
+    sm.push('  .footer-bottom { justify-content: flex-start; }');
+    sm.push('  /* 移动端不留 ±2 倍留白，代码块改为横向滚动 */');
+    sm.push('  .code-wrap table { display: block; overflow-x: auto; }');
+    sm.push('  .table-wrap { margin-right: -18px; margin-left: -18px; padding: 0 18px; }');
+
+    /* --- 侧栏：offcanvas / inline / hide --- */
+    if (sideMode === 'offcanvas') {
+      sm.push('  /* 侧栏抽屉：默认移出视口，由悬浮按钮唤起 */');
+      sm.push('  .site-nav {');
+      sm.push('    position: fixed;');
+      sm.push('    top: var(--xfm-nav-h);');
+      sm.push('    bottom: 0;');
+      sm.push('    left: 0;');
+      sm.push('    z-index: var(--z-drawer);');
+      sm.push('    width: min(84vw, 320px);');
+      sm.push('    max-height: none;');
+      sm.push('    margin: 0;');
+      sm.push('    padding: 16px 14px calc(16px + env(safe-area-inset-bottom));');
+      sm.push('    background: var(--c-surface);');
+      sm.push('    border: 0;');
+      sm.push('    border-right: 1px solid var(--c-border);');
+      sm.push('    border-radius: 0 var(--xfm-radius-lg) var(--xfm-radius-lg) 0;');
+      sm.push('    box-shadow: var(--shadow-xl);');
+      sm.push('    transform: translateX(-102%);');
+      sm.push('    transition: transform var(--t-base) var(--ease-out);');
+      sm.push('    overflow-y: auto;');
+      sm.push('    overscroll-behavior: contain;');
+      sm.push('    -webkit-overflow-scrolling: touch;');
+      sm.push('  }');
+      sm.push('  .site-nav.is-open { transform: translateX(0); }');
+      sm.push('  .site-nav .site-nav-inner { max-height: none; }');
+      sm.push('  .nav-fab { display: inline-grid; }');
+      sm.push('  body.sidenav-open { overflow: hidden; }');
+      sm.push('  body.side-nav-offcanvas .sidenav-mask { display: block; }');
+      sm.push('  body.sidenav-open .sidenav-mask { opacity: 1; pointer-events: auto; }');
+    } else if (sideMode === 'inline') {
+      sm.push('  /* 侧栏内联：折叠面板置于正文上方 */');
+      sm.push('  .site-nav {');
+      sm.push('    position: static;');
+      sm.push('    max-height: none;');
+      sm.push('    order: -1;');
+      sm.push('    padding: 16px 18px;');
+      sm.push('    background: var(--c-surface);');
+      sm.push('    border: 1px solid var(--c-border);');
+      sm.push('    border-radius: var(--xfm-radius-lg);');
+      sm.push('    box-shadow: var(--shadow-xs);');
+      sm.push('  }');
+      sm.push('  .site-nav .site-nav-inner { max-height: 280px; }');
+    } else {
+      sm.push('  /* 侧栏隐藏 */');
+      sm.push('  .site-nav { display: none; }');
+    }
+
+    /* --- 目录：widget / hide --- */
+    if (tocMode === 'widget') {
+      sm.push('  /* 目录转为正文顶部的折叠面板 */');
+      sm.push('  .toc-column {');
+      sm.push('    display: block;');
+      sm.push('    position: static;');
+      sm.push('    max-height: none;');
+      sm.push('    order: -1;');
+      sm.push('    margin-bottom: var(--gap);');
+      sm.push('    overflow: visible;');
+      sm.push('  }');
+      sm.push('  .toc-column-inner {');
+      sm.push('    position: static;');
+      sm.push('    max-height: none;');
+      sm.push('    padding: 12px 16px;');
+      sm.push('    background: var(--c-surface);');
+      sm.push('    border: 1px solid var(--c-border);');
+      sm.push('    border-radius: var(--xfm-radius);');
+      sm.push('    box-shadow: var(--shadow-xs);');
+      sm.push('  }');
+      sm.push('  .toc-column .toc-body {');
+      sm.push('    max-height: 0;');
+      sm.push('    overflow: hidden;');
+      sm.push('    margin: 0;');
+      sm.push('    transition: max-height var(--t-base) var(--ease);');
+      sm.push('  }');
+      sm.push('  .toc-column.is-expanded .toc-body { max-height: 60vh; overflow-y: auto; }');
+      sm.push('  .toc-column .toc-header {');
+      sm.push('    display: flex;');
+      sm.push('    align-items: center;');
+      sm.push('    justify-content: space-between;');
+      sm.push('    cursor: pointer;');
+      sm.push('    user-select: none;');
+      sm.push('  }');
+      sm.push('  .toc-column .toc-header::after {');
+      sm.push('    content: "";');
+      sm.push('    width: 7px;');
+      sm.push('    height: 7px;');
+      sm.push('    border-right: 1.5px solid var(--c-text-faint);');
+      sm.push('    border-bottom: 1.5px solid var(--c-text-faint);');
+      sm.push('    transform: rotate(45deg);');
+      sm.push('    transition: transform var(--t-fast) var(--ease);');
+      sm.push('  }');
+      sm.push('  .toc-column.is-expanded .toc-header::after { transform: rotate(-135deg); }');
+    } else {
+      sm.push('  .toc-column { display: none; }');
+    }
+
+    out.push('@media (max-width: ' + bp.sm + 'px) {');
+    out.push(sm.map(function (l) { return l; }).join('\n'));
+    out.push('}');
+
+    /* ---------------------------------------------------------------- *
+     * ≤ xs：窄屏压缩
+     * ---------------------------------------------------------------- */
+    out.push('@media (max-width: ' + bp.xs + 'px) {');
+    out.push('  .hero-stat { padding: 10px 8px; min-width: 0; }');
+    out.push('  .stat-num { font-size: 18px; }');
+    out.push('  .stat-label { font-size: 10.5px; }');
+    out.push('  .page-btn-text { display: none; }');
+    out.push('  .pagination { gap: 8px; }');
+    out.push('  .post-nav { gap: 10px; }');
+    out.push('  .xfm-note { padding: 12px 13px; }');
+    out.push('  .note-icon { width: 22px; height: 22px; }');
+    out.push('  .lightbox { padding: 16px; }');
+    out.push('  .brand-text { display: none; }');
+    out.push('  .toc-side { display: none; }');
+    out.push('}');
+
+    /* ---------------------------------------------------------------- *
+     * 矮屏（手机横屏）：压缩纵向呼吸感
+     * ---------------------------------------------------------------- */
+    if (compact) {
+      out.push('@media (max-height: 480px) and (max-width: ' + bp.lg + 'px) {');
+      out.push('  :root { --xfm-nav-h: 50px; }');
+      out.push('  .hero-panel { padding: 16px 18px; }');
+      out.push('  .hero-panel.is-collapsed { display: none; }');
+      out.push('  .site-content, .content-wrap { padding-top: 12px; padding-bottom: 12px; }');
+      out.push('  .post-view, .page-view { padding: 18px 18px 20px; }');
+      out.push('  .search-panel { max-height: 92vh; }');
+      out.push('  .site-nav-inner { max-height: 200px; }');
+      out.push('  .back-to-top { bottom: 12px; right: 12px; }');
+      out.push('}');
+    }
+
+    /* ---------------------------------------------------------------- *
+     * 触摸设备：保证最小可点击区域
+     * ---------------------------------------------------------------- */
+    if (touch > 0) {
+      out.push('@media (pointer: coarse) {');
+      out.push('  .nav-link, .nav-sub-link, .drawer-link, .xfm-nav-link,');
+      out.push('  .toc-link, .tagcloud-item, .widget-link, .page-btn {');
+      out.push('    min-height: ' + touch + 'px;');
+      out.push('  }');
+      out.push('  .icon-btn { width: ' + Math.max(touch, 38) + 'px; height: ' + Math.max(touch, 38) + 'px; }');
+      out.push('}');
+    }
+
+    /* ---------------------------------------------------------------- *
+     * 安全区适配（刘海屏 / 手势条）
+     * ---------------------------------------------------------------- */
+    if (safeArea) {
+      out.push('@supports (padding: env(safe-area-inset-left)) {');
+      out.push('  .site-header, .content-wrap, .footer-inner {');
+      out.push('    padding-left: max(var(--gutter), env(safe-area-inset-left));');
+      out.push('    padding-right: max(var(--gutter), env(safe-area-inset-right));');
+      out.push('  }');
+      out.push('  .drawer { padding-bottom: env(safe-area-inset-bottom); }');
+      out.push('  .back-to-top {');
+      out.push('    bottom: calc(20px + env(safe-area-inset-bottom));');
+      out.push('    right: calc(20px + env(safe-area-inset-right));');
+      out.push('  }');
+      out.push('  .drawer-head, .search-panel-foot { padding-top: env(safe-area-inset-top); }');
+      out.push('}');
+    }
+
+    /* ---------------------------------------------------------------- *
+     * 悬停能力降级：无 hover 设备隐藏悬停浮层，避免点一次卡住
+     * ---------------------------------------------------------------- */
+    out.push('@media (hover: none) {');
+    out.push('  .nav-item.has-children:hover .nav-submenu { display: none; }');
+    out.push('  .post-card:hover, .widget:hover, .hero-panel:hover { transform: none; }');
+    out.push('}');
+  }
+%><% if (enabled) { %>
+<style id="xfm-responsive-style">
+<%- out.join('\n') %>
+</style>
+<% } %>

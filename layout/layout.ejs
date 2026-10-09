@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="<%= config.language || 'zh-CN' %>" data-mode="<%= page.mode || theme.mode || 'blog' %>">
+<%
+  // 断点唯一来源：与生成 @media 的样式用同一份归一化结果
+  const __R = xfm_breakpoints();
+%>
+<html lang="<%= config.language || 'zh-CN' %>" data-mode="<%= page.mode || theme.mode || 'blog' %>" data-bp-sm="<%= __R.breakpoints.sm %>">
 <head><%- partial('_partials/head') %></head>
 <%
   const currentMode = page.mode || theme.mode || 'blog';
@@ -8,10 +12,14 @@
   const isContentPage = Boolean(is_post() || is_page());
   const tocEnabled = isContentPage && page.toc !== false && theme.post && theme.post.toc !== false;
   const rightToc = tocEnabled && currentMode !== 'blog' && (currentMode === 'docs' ? theme.docs.toc !== false : theme.notes.toc !== false);
+  const sideMode = __R.mobile_sidebar;
+  const hasSideNav = currentMode === 'docs' || currentMode === 'notes';
   const bodyClass = [
     'mode-' + currentMode,
     hasSidebar ? 'has-sidebar sidebar-' + sidebarPos : 'no-sidebar',
     rightToc ? 'has-inline-toc' : '',
+    hasSideNav ? 'side-nav-' + sideMode : '',
+    __R.enable ? '' : 'rwd-off',
     theme.appearance && theme.appearance.animation === false ? 'no-animation' : ''
   ].filter(Boolean).join(' ');
 %>
@@ -65,6 +73,14 @@
     </aside>
     <% } %>
   </div>
+
+  <% if (hasSideNav) { %>
+  <div class="sidenav-mask" data-toggle="sidenav"></div>
+  <button class="nav-fab" type="button" data-toggle="sidenav" aria-label="<%= __('toc.title') %>" aria-controls="<%= currentMode === 'docs' ? 'docsNav' : 'notesNav' %>">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-list"></use></svg>
+    <span class="nav-fab-text"><%= __('toc.title') %></span>
+  </button>
+  <% } %>
 
   <%- partial('_partials/footer') %>
   <%- partial('_partials/search') %>

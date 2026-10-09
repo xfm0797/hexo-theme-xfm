@@ -95,6 +95,84 @@
   });
 
   /* ------------------------------------------------------------------ *
+   * 侧栏抽屉（笔记 / 文档模式，窄屏由悬浮按钮唤起）
+   * ------------------------------------------------------------------ */
+  function sideNavEl() {
+    return $('#docsNav') || $('#notesNav');
+  }
+
+  function setSideNav(open) {
+    var nav = sideNavEl();
+    if (!nav) return;
+    nav.classList.toggle('is-open', open);
+    document.body.classList.toggle('sidenav-open', open);
+    var fab = $('.nav-fab');
+    if (fab) fab.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  $$('[data-toggle="sidenav"]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var nav = sideNavEl();
+      setSideNav(!(nav && nav.classList.contains('is-open')));
+    });
+  });
+
+  // 点击侧栏内链接后自动收起，避免遮住正文
+  document.addEventListener('click', function (e) {
+    if (!document.body.classList.contains('sidenav-open')) return;
+    if (e.target.closest && e.target.closest('.sidenav-mask')) return; // 由上面的 click 统一处理
+    var link = e.target.closest ? e.target.closest('.site-nav a') : null;
+    if (link) setSideNav(false);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') setSideNav(false);
+  });
+
+  // 视口放大回桌面宽度时复位，防止抽屉状态残留
+  // 阈值取自 _config.yml 的 responsive.breakpoints.sm，由模板写入 <html data-bp-sm>
+  if (typeof window.matchMedia === 'function') {
+    var smNum = parseInt(document.documentElement.getAttribute('data-bp-sm'), 10);
+    var sideNavBp = (isFinite(smNum) && smNum > 0 ? smNum : 768) + 1;
+    var wideMQ = window.matchMedia('(min-width: ' + sideNavBp + 'px)');
+    var onWide = function (e) {
+      if (e.matches) setSideNav(false);
+    };
+    if (wideMQ.addEventListener) wideMQ.addEventListener('change', onWide);
+    else if (wideMQ.addListener) wideMQ.addListener(onWide);
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 窄屏目录折叠面板
+   * ------------------------------------------------------------------ */
+  (function () {
+    var tocColumn = $('#tocColumn');
+    if (!tocColumn) return;
+    var header = tocColumn.querySelector('.toc-header');
+    if (!header) return;
+    header.setAttribute('role', 'button');
+    header.setAttribute('tabindex', '0');
+    header.setAttribute('aria-expanded', 'false');
+    header.addEventListener('click', function () {
+      var expanded = tocColumn.classList.toggle('is-expanded');
+      header.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    });
+    header.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        header.click();
+      }
+    });
+    // 点击目录项后收起，直接跳到正文锚点
+    tocColumn.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('.toc-link')) {
+        tocColumn.classList.remove('is-expanded');
+        header.setAttribute('aria-expanded', 'false');
+      }
+    });
+  })();
+
+  /* ------------------------------------------------------------------ *
    * 搜索面板
    * ------------------------------------------------------------------ */
   window.__xfmSearch = {

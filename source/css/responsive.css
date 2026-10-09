@@ -1,319 +1,11 @@
 /* ==========================================================================
    XFM Theme · responsive.css
-   断点适配 / 打印样式 / 动效降级
+   与断点无关的适配：动效降级 / 打印
+
+   注意：所有宽度断点（xxl ~ xs）相关的适配均由
+   layout/_partials/responsive-style.ejs 依据 _config.yml 的
+   responsive.breakpoints 动态生成，修改断点请改配置，不要在本文件里写 @media 宽度。
    ========================================================================== */
-
-/* --------------------------------------------------------------------------
-   ≤ 1280px：收紧间距
-   -------------------------------------------------------------------------- */
-@media (max-width: 1280px) {
-  :root {
-    --gap: 22px;
-    --nav-w: 256px;
-    --toc-w: 220px;
-    --widget-w: 268px;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   ≤ 1080px：导航折叠、文档/笔记侧栏转入正文上方
-   -------------------------------------------------------------------------- */
-@media (max-width: 1080px) {
-  .nav-menu {
-    display: none;
-  }
-
-  .nav-toggle {
-    display: inline-grid;
-  }
-
-  body.mode-notes .site-body,
-  body.mode-docs .site-body,
-  body.mode-notes.has-inline-toc .site-body,
-  body.mode-docs.has-inline-toc .site-body {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .site-nav {
-    position: static;
-    max-height: none;
-    order: -1;
-    padding: 16px 18px;
-    background: var(--c-surface);
-    border: 1px solid var(--c-border);
-    border-radius: var(--xfm-radius-lg);
-    box-shadow: var(--shadow-xs);
-  }
-
-  .site-nav-inner {
-    max-height: 280px;
-  }
-
-  .toc-column {
-    display: none;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   ≤ 900px：侧边挂件下移、封面卡片转为纵向
-   -------------------------------------------------------------------------- */
-@media (max-width: 900px) {
-  body.has-sidebar.sidebar-right .site-body,
-  body.has-sidebar.sidebar-left .site-body {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  body.has-sidebar.sidebar-left .content-column,
-  body.has-sidebar.sidebar-left .widget-column {
-    order: 0;
-  }
-
-  .widget-column {
-    position: static;
-    max-height: none;
-    overflow: visible;
-  }
-
-  /* 两列封面卡片转纵向 */
-  .post-card.has-cover {
-    flex-direction: column;
-  }
-
-  .post-card.has-cover .post-cover {
-    width: 100%;
-    max-width: none;
-    aspect-ratio: 16 / 9;
-  }
-
-  .post-card.has-cover.is-flip .post-cover {
-    order: 0;
-  }
-
-  .post-card.has-cover .post-cover img {
-    min-height: 0;
-    height: 100%;
-  }
-
-  .hero-stats {
-    width: 100%;
-  }
-
-  .hero-stat {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   ≤ 768px：移动端
-   -------------------------------------------------------------------------- */
-@media (max-width: 768px) {
-  :root {
-    --gutter: 16px;
-    --gap: 18px;
-    --fs-md: 15.5px;
-  }
-
-  .search-trigger .kbd-hint {
-    display: none;
-  }
-
-  .hero-panel {
-    padding: 24px 20px;
-  }
-
-  .hero-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .hero-avatar {
-    width: 54px;
-    height: 54px;
-  }
-
-  .hero-title {
-    font-size: 22px;
-  }
-
-  .post-card {
-    border-radius: var(--xfm-radius);
-  }
-
-  .post-card.has-cover .post-body,
-  .post-body {
-    padding: 18px 18px 20px;
-  }
-
-  .post-title {
-    font-size: 17.5px;
-  }
-
-  .post-view,
-  .page-view {
-    padding: 22px 18px 24px;
-    border-radius: var(--xfm-radius);
-  }
-
-  .post-cover-hero {
-    margin: -22px -18px 20px;
-    aspect-ratio: 16 / 10;
-    min-height: 180px;
-    border-radius: var(--xfm-radius) var(--xfm-radius) 0 0;
-  }
-
-  .cover-hero-inner {
-    padding: 18px;
-  }
-
-  .post-view-title {
-    font-size: 24px;
-  }
-
-  .page-view-title {
-    font-size: 25px;
-  }
-
-  .post-view-meta {
-    gap: 6px 12px;
-    font-size: 12.5px;
-  }
-
-  .post-nav {
-    grid-template-columns: 1fr;
-  }
-
-  .post-nav-item.is-next {
-    text-align: left;
-    align-items: flex-start;
-  }
-
-  .related-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .links-grid,
-  .post-layout-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .category-cloud {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  }
-
-  .xfm-row {
-    grid-template-columns: 1fr;
-  }
-
-  .xfm-col,
-  .xfm-row > .xfm-col:not([style]) {
-    grid-column: span 12;
-  }
-
-  .archive-item {
-    flex-wrap: wrap;
-    gap: 4px 10px;
-  }
-
-  .archive-title {
-    flex-basis: 100%;
-    order: 2;
-    white-space: normal;
-  }
-
-  .post-layout-list .post-card {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    padding: 14px 16px;
-  }
-
-  .post-layout-list .post-body {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  .post-layout-list .post-title {
-    order: 0;
-    flex: 1 1 auto;
-  }
-
-  .post-layout-list .post-stat {
-    margin-left: 0;
-  }
-
-  .error-404 {
-    padding-top: 40px;
-  }
-
-  .search-modal {
-    padding: 0;
-  }
-
-  .search-panel {
-    max-height: 100vh;
-    height: 100vh;
-    border-radius: 0;
-    border: 0;
-  }
-
-  .xfm-content blockquote {
-    padding: 0.85em 1em;
-  }
-
-  .footer-main {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .footer-bottom {
-    justify-content: flex-start;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   ≤ 480px：窄屏
-   -------------------------------------------------------------------------- */
-@media (max-width: 480px) {
-  .hero-stat {
-    padding: 10px 8px;
-    min-width: 0;
-  }
-
-  .stat-num {
-    font-size: 18px;
-  }
-
-  .stat-label {
-    font-size: 10.5px;
-  }
-
-  .page-btn-text {
-    display: none;
-  }
-
-  .pagination {
-    gap: 8px;
-  }
-
-  .post-nav {
-    gap: 10px;
-  }
-
-  .xfm-note {
-    padding: 12px 13px;
-  }
-
-  .note-icon {
-    width: 22px;
-    height: 22px;
-  }
-
-  .lightbox {
-    padding: 16px;
-  }
-}
 
 /* --------------------------------------------------------------------------
    降级：用户偏好减少动效
@@ -329,6 +21,14 @@
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* 入场动画直接呈现终态，避免内容不可见 */
+  .reveal,
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 
@@ -339,6 +39,7 @@
   .site-header,
   .drawer,
   .drawer-mask,
+  .nav-fab,
   .site-nav,
   .toc-column,
   .widget-column,
@@ -411,5 +112,16 @@
 
   .xfm-content .headline {
     break-after: avoid;
+  }
+
+  /* 折叠内容在打印时全部展开 */
+  .fold-content,
+  .xfm-fold.is-collapsed .fold-body {
+    display: block !important;
+    max-height: none !important;
+  }
+
+  @page {
+    margin: 16mm 14mm;
   }
 }

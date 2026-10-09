@@ -187,6 +187,57 @@ module.exports = function (hexo) {
     return Math.max(1, Math.round(words / wpm));
   });
 
+  /**
+   * 归一化后的响应式配置。
+   * 断点补全与递减纠正只在这里做一次，模板与样式生成器共用同一份结果，
+   * 避免 <html data-bp-sm> 与生成的 @media 不一致。
+   */
+  register('xfm_breakpoints', function () {
+    const pick = function (v, dft, min, max) {
+      const x = Number(v);
+      if (!isFinite(x)) return dft;
+      return Math.min(max, Math.max(min, Math.round(x)));
+    };
+    const themeRwd =
+      (hexo.theme && hexo.theme.config && hexo.theme.config.responsive) || {};
+    const siteRwd = (hexo.config && hexo.config.responsive) || {};
+    const rwd = Object.assign({}, themeRwd, siteRwd);
+
+    const rawBp = Object.assign({}, themeRwd.breakpoints || {}, siteRwd.breakpoints || {});
+    const bp = {
+      xxl: pick(rawBp.xxl, 1600, 1200, 2600),
+      xl: pick(rawBp.xl, 1280, 1000, 2200),
+      lg: pick(rawBp.lg, 1080, 800, 2000),
+      md: pick(rawBp.md, 900, 700, 1800),
+      sm: pick(rawBp.sm, 768, 400, 1200),
+      xs: pick(rawBp.xs, 480, 320, 900)
+    };
+    // 保证断点严格递减，用户填错时自动纠正而不是让规则互相覆盖
+    const order = ['xxl', 'xl', 'lg', 'md', 'sm', 'xs'];
+    for (let i = 1; i < order.length; i++) {
+      if (bp[order[i]] >= bp[order[i - 1]]) bp[order[i]] = bp[order[i - 1]] - 1;
+    }
+
+    return {
+      enable: rwd.enable !== false,
+      breakpoints: bp,
+      mobile_sidebar:
+        rwd.mobile_sidebar === 'inline' || rwd.mobile_sidebar === 'hide'
+          ? rwd.mobile_sidebar
+          : 'offcanvas',
+      mobile_toc: rwd.mobile_toc === 'hide' ? 'hide' : 'widget',
+      fluid_typography: rwd.fluid_typography !== false,
+      fluid_min_width: pick(rwd.fluid_min_width, 360, 240, 1200),
+      fluid_max_width: pick(rwd.fluid_max_width, 1440, 600, 3000),
+      touch_target: pick(rwd.touch_target, 44, 0, 96),
+      safe_area: rwd.safe_area !== false,
+      compact_height: rwd.compact_height !== false,
+      user_zoom: rwd.user_zoom !== false,
+      container_width: pick(rwd.container_width, 0, 0, 3000),
+      content_width: pick(rwd.content_width, 0, 0, 2000)
+    };
+  });
+
   /** 导航选中态 */
   register('xfm_active', function (path) {
     const page = this.page || {};
@@ -290,7 +341,7 @@ module.exports = function (hexo) {
     let html = '<nav class="xfm-sidebar-nav xfm-notes-nav">';
     html +=
       '<div class="xfm-notes-count">' +
-      escapeHTML(this.__('notes.total_notes').replace('%s', String(posts.length))) +
+      escapeHTML(this.__('notes.total_notes', posts.length)) +
       '</div>';
     groups.forEach((list, key) => {
       const open = list.some((p) => normalizePath(p.path) === current);

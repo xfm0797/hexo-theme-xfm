@@ -1443,3 +1443,58 @@
   margin-top: 42px;
   text-align: left;
 }
+
+/* --------------------------------------------------------------------------
+   响应式配套组件
+   显示时机由 responsive-style.ejs 按断点与侧栏模式注入，此处只定义外观
+   -------------------------------------------------------------------------- */
+
+/* 侧栏唤起悬浮按钮（笔记 / 文档模式，窄屏可见） */
+.nav-fab {
+  display: none;
+  position: fixed;
+  right: 20px;
+  bottom: 76px;
+  z-index: var(--z-float);
+  align-items: center;
+  gap: 7px;
+  padding: 0 16px;
+  height: 44px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  box-shadow: var(--shadow-lg);
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+
+.nav-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+  color: var(--xfm-primary);
+}
+
+.nav-fab .xfm-icon {
+  width: 17px;
+  height: 17px;
+}
+
+/* 侧栏抽屉遮罩（显示时机由响应式生成样式按断点注入） */
+.sidenav-mask {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-drawer) - 1);
+  background: rgba(9, 12, 18, 0.42);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-base) var(--ease);
+}
+
+/* 目录折叠面板：桌面态不显示箭头指示（窄屏才由生成样式打开） */
+.toc-column .toc-header::after {
+  content: none;
+}
