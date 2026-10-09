@@ -1,0 +1,371 @@
+<%
+  /*
+   * 自适应档位样式生成器
+   * 把 _config.yml 中 adaptive 一节翻译成「按档位跳变」的 CSS：
+   *   html[data-tier="mobile"]  { … }   ← 手机档专属布局
+   *   html[data-tier="tablet"]  { … }   ← 平板档专属布局
+   *   html[data-tier="desktop"] { … }   ← 桌面档专属布局
+   * 与响应式（同一套 DOM 靠 @media 连续缩放）不同，这里每档都拿到
+   * 一整套独立的令牌 + 布局 + 组件形态，档位之间是跳变。
+   * 断点 / 形态 / 组件开关全部由配置决定，不要改模板或 CSS。
+   */
+  const A = xfm_adaptive();
+  const CS = A.component_selector;
+  const navH = Number((theme.navbar && theme.navbar.height) || 64);
+  const widgetSticky = !(theme.sidebar && theme.sidebar.sticky === false);
+
+  /* 每档的默认设计令牌 */
+  const TOKENS = {
+    desktop: { gutter: 24, gap: 28, navW: 286, tocW: 244, widgetW: 292, navH: navH, pageMax: 1280 },
+    tablet: { gutter: 20, gap: 22, navW: 246, tocW: 0, widgetW: 264, navH: Math.max(48, navH - 4), pageMax: 1024 },
+    mobile: { gutter: 16, gap: 18, navW: 200, tocW: 0, widgetW: 0, navH: Math.max(46, navH - 8), pageMax: 720 }
+  };
+  /* 每档的字号（自适应 = 档位跳变；某档开启 fluid 才做档内平滑缩放） */
+  const TYPE = {
+    desktop: { base: 15, md: 16, lg: 18, xl: 22, x2: 28, x3: 34, title: 34 },
+    tablet: { base: 14.8, md: 15.6, lg: 17.5, xl: 21, x2: 26, x3: 31, title: 30 },
+    mobile: { base: 14.5, md: 15.2, lg: 17, xl: 20, x2: 24, x3: 28, title: 24 }
+  };
+
+  const fwMin = A.fluid_min_width;
+  const fwMax = Math.max(A.fluid_max_width, fwMin + 120);
+
+  /* 流式字号：在两个宽度之间线性插值 */
+  function clampFS(from, to) {
+    const slope = (to - from) / (fwMax - fwMin);
+    const intercept = (from - slope * fwMin) / 16;
+    return 'clamp(' + from + 'px, ' +
+      intercept.toFixed(4).replace(/0+$/, '').replace(/\.$/, '') + 'rem + ' +
+      (slope * 100).toFixed(3).replace(/0+$/, '').replace(/\.$/, '') + 'vw, ' +
+      to + 'px)';
+  }
+
+  const out = [];
+  out.push('/* XFM · 自适应档位样式（由 adaptive 配置生成） */');
+
+  const tiers = A.enable ? A.order : [A.default_tier];
+
+  /* ------------------------------------------------------------------ *
+   * 1. 每档设计令牌 + 字号
+   * ------------------------------------------------------------------ */
+  tiers.forEach(function (name) {
+    const t = A.tiers[name];
+    const tk = TOKENS[name];
+    const ty = TYPE[name];
+    const compact = t.density === 'compact';
+    const gutter = Math.max(10, tk.gutter - (compact ? 2 : 0));
+    const gap = Math.max(10, tk.gap - (compact ? 4 : 0));
+    const fs = function (k, dKey) {
+      return t.fluid ? clampFS(ty[k], TYPE.desktop[dKey || k]) : ty[k] + 'px';
+    };
+    const lines = [];
+    lines.push('  --page-max: ' + (t.container_width || tk.pageMax) + 'px;');
+    if (t.content_width) lines.push('  --content-max: ' + t.content_width + 'px;');
+    lines.push('  --gutter: ' + gutter + 'px;');
+    lines.push('  --gap: ' + gap + 'px;');
+    lines.push('  --nav-w: ' + tk.navW + 'px;');
+    lines.push('  --toc-w: ' + tk.tocW + 'px;');
+    lines.push('  --widget-w: ' + tk.widgetW + 'px;');
+    lines.push('  --xfm-nav-h: ' + tk.navH + 'px;');
+    lines.push('  --fs-base: ' + fs('base') + ';');
+    lines.push('  --fs-md: ' + fs('md') + ';');
+    lines.push('  --fs-lg: ' + fs('lg') + ';');
+    lines.push('  --fs-xl: ' + fs('xl') + ';');
+    lines.push('  --fs-2xl: ' + fs('x2', 'x2') + ';');
+    lines.push('  --fs-3xl: ' + fs('x3', 'x3') + ';');
+    out.push('html[data-tier="' + name + '"] {');
+    out.push(lines.join('\n'));
+    out.push('}');
+    out.push('html[data-tier="' + name + '"] .post-view-title,');
+    out.push('html[data-tier="' + name + '"] .page-view-title {');
+    out.push('  font-size: ' + (t.fluid ? clampFS(ty.title, TYPE.desktop.title) : ty.title + 'px') + ';');
+    out.push('}');
+  });
+
+  /* ------------------------------------------------------------------ *
+   * 2. 每档布局：栏数与各栏形态
+   * ------------------------------------------------------------------ */
+  function docCols(t) {
+    const cols = [];
+    if (t.layout !== 'single' && t.sidebar === 'sticky') cols.push('var(--nav-w)');
+    cols.push('minmax(0, 1fr)');
+    if (t.layout === 'three-column' && t.toc === 'sticky') cols.push('var(--toc-w)');
+    return cols.join(' ');
+  }
+
+  function blogCols(t) {
+    if (t.layout === 'single' || t.sidebar !== 'sticky') return 'minmax(0, 1fr)';
+    return 'minmax(0, 1fr) var(--widget-w)';
+  }
+
+  function blogColsLeft(t) {
+    if (t.layout === 'single' || t.sidebar !== 'sticky') return 'minmax(0, 1fr)';
+    return 'var(--widget-w) minmax(0, 1fr)';
+  }
+
+  tiers.forEach(function (name) {
+    const t = A.tiers[name];
+    const p = 'html[data-tier="' + name + '"] ';
+    const cols = docCols(t);
+    out.push('/* ' + name + ' 档：栏数 ' + t.layout + ' */');
+    out.push(p + 'body.mode-docs .site-body,');
+    out.push(p + 'body.mode-notes .site-body,');
+    out.push(p + 'body.mode-docs.has-inline-toc .site-body,');
+    out.push(p + 'body.mode-notes.has-inline-toc .site-body {');
+    out.push('  grid-template-columns: ' + cols + ';');
+    out.push('}');
+    out.push(p + 'body.has-sidebar.sidebar-right .site-body {');
+    out.push('  grid-template-columns: ' + blogCols(t) + ';');
+    out.push('}');
+    out.push(p + 'body.has-sidebar.sidebar-left .site-body {');
+    out.push('  grid-template-columns: ' + blogColsLeft(t) + ';');
+    out.push('}');
+
+    /* --- Blog 侧边挂件：成列时吸附，单栏时回落到正文下方 --- */
+    if (blogCols(t) !== 'minmax(0, 1fr)' && widgetSticky) {
+      out.push(p + '.widget-column {');
+      out.push('  position: sticky;');
+      out.push('  top: calc(var(--xfm-nav-h) + 22px);');
+      out.push('  max-height: calc(100vh - var(--xfm-nav-h) - 44px);');
+      out.push('  overflow-y: auto;');
+      out.push('  overscroll-behavior: contain;');
+      out.push('  padding-right: 2px;');
+      out.push('}');
+    } else {
+      out.push(p + '.widget-column {');
+      out.push('  position: static;');
+      out.push('  max-height: none;');
+      out.push('  overflow: visible;');
+      out.push('  order: 0;');
+      out.push('}');
+    }
+
+    /* --- 左侧栏（笔记 / 文档）形态 --- */
+    if (t.sidebar === 'sticky') {
+      out.push(p + '.site-nav {');
+      out.push('  position: sticky;');
+      out.push('  top: calc(var(--xfm-nav-h) + 16px);');
+      out.push('  max-height: calc(100vh - var(--xfm-nav-h) - 48px);');
+      out.push('  order: 0;');
+      out.push('}');
+    } else if (t.sidebar === 'inline') {
+      out.push(p + '.site-nav {');
+      out.push('  position: static;');
+      out.push('  max-height: none;');
+      out.push('  order: -1;');
+      out.push('  padding: 16px 18px;');
+      out.push('  background: var(--c-surface);');
+      out.push('  border: 1px solid var(--c-border);');
+      out.push('  border-radius: var(--xfm-radius-lg);');
+      out.push('  box-shadow: var(--shadow-xs);');
+      out.push('}');
+      out.push(p + '.site-nav .site-nav-inner { max-height: 280px; }');
+    } else if (t.sidebar === 'offcanvas') {
+      out.push(p + '.site-nav {');
+      out.push('  position: fixed;');
+      out.push('  top: var(--xfm-nav-h);');
+      out.push('  bottom: 0;');
+      out.push('  left: 0;');
+      out.push('  z-index: var(--z-drawer);');
+      out.push('  width: min(84vw, 320px);');
+      out.push('  max-height: none;');
+      out.push('  margin: 0;');
+      out.push('  padding: 16px 14px calc(16px + env(safe-area-inset-bottom));');
+      out.push('  background: var(--c-surface);');
+      out.push('  border: 0;');
+      out.push('  border-right: 1px solid var(--c-border);');
+      out.push('  border-radius: 0 var(--xfm-radius-lg) var(--xfm-radius-lg) 0;');
+      out.push('  box-shadow: var(--shadow-xl);');
+      out.push('  transform: translateX(-102%);');
+      out.push('  transition: transform var(--t-base) var(--ease-out);');
+      out.push('  overflow-y: auto;');
+      out.push('  overscroll-behavior: contain;');
+      out.push('  -webkit-overflow-scrolling: touch;');
+      out.push('}');
+      out.push(p + '.site-nav.is-open { transform: translateX(0); }');
+      out.push(p + '.site-nav .site-nav-inner { max-height: none; }');
+      out.push(p + '.nav-fab { display: inline-grid; }');
+      out.push(p + '.sidenav-mask { display: block; }');
+      out.push(p + 'body.sidenav-open { overflow: hidden; }');
+      out.push(p + 'body.sidenav-open .sidenav-mask { opacity: 1; pointer-events: auto; }');
+    } else {
+      out.push(p + '.site-nav { display: none; }');
+      out.push(p + '.nav-fab { display: none; }');
+    }
+
+    /* --- 右侧目录形态 --- */
+    if (t.toc === 'sticky') {
+      out.push(p + '.toc-column {');
+      out.push('  display: block;');
+      out.push('  position: sticky;');
+      out.push('  top: calc(var(--xfm-nav-h) + 16px);');
+      out.push('  max-height: calc(100vh - var(--xfm-nav-h) - 48px);');
+      out.push('  order: 0;');
+      out.push('  margin-bottom: 0;');
+      out.push('}');
+      out.push(p + '.toc-column .toc-header { cursor: default; }');
+      out.push(p + '.toc-column .toc-header::after { display: none; }');
+      out.push(p + '.toc-column .toc-body { max-height: none; }');
+    } else if (t.toc === 'panel') {
+      out.push(p + '.toc-column {');
+      out.push('  display: block;');
+      out.push('  position: static;');
+      out.push('  max-height: none;');
+      out.push('  order: -1;');
+      out.push('  margin-bottom: var(--gap);');
+      out.push('  overflow: visible;');
+      out.push('}');
+      out.push(p + '.toc-column-inner {');
+      out.push('  position: static;');
+      out.push('  max-height: none;');
+      out.push('  padding: 12px 16px;');
+      out.push('  background: var(--c-surface);');
+      out.push('  border: 1px solid var(--c-border);');
+      out.push('  border-radius: var(--xfm-radius);');
+      out.push('  box-shadow: var(--shadow-xs);');
+      out.push('}');
+      out.push(p + '.toc-column .toc-body {');
+      out.push('  max-height: 0;');
+      out.push('  overflow: hidden;');
+      out.push('  margin: 0;');
+      out.push('  transition: max-height var(--t-base) var(--ease);');
+      out.push('}');
+      out.push(p + '.toc-column.is-expanded .toc-body { max-height: 60vh; overflow-y: auto; }');
+      out.push(p + '.toc-column .toc-header {');
+      out.push('  display: flex;');
+      out.push('  align-items: center;');
+      out.push('  justify-content: space-between;');
+      out.push('  cursor: pointer;');
+      out.push('  user-select: none;');
+      out.push('}');
+      out.push(p + '.toc-column .toc-header::after {');
+      out.push('  content: "";');
+      out.push('  width: 7px;');
+      out.push('  height: 7px;');
+      out.push('  border-right: 1.5px solid var(--c-text-faint);');
+      out.push('  border-bottom: 1.5px solid var(--c-text-faint);');
+      out.push('  transform: rotate(45deg);');
+      out.push('  transition: transform var(--t-fast) var(--ease);');
+      out.push('}');
+      out.push(p + '.toc-column.is-expanded .toc-header::after { transform: rotate(-135deg); }');
+    } else {
+      out.push(p + '.toc-column { display: none; }');
+    }
+
+    /* --- 顶部导航形态 --- */
+    if (t.nav === 'drawer') {
+      out.push(p + '.nav-menu { display: none; }');
+      out.push(p + '.nav-toggle { display: inline-grid; }');
+    } else {
+      out.push(p + '.nav-menu { display: flex; }');
+      out.push(p + '.nav-toggle { display: none; }');
+    }
+
+    /* --- 组件开关 --- */
+    if (t.disable.length) {
+      t.disable.forEach(function (key) {
+        out.push(p + CS[key] + ' { display: none !important; }');
+      });
+    }
+
+    /* --- 该档的排版细节 --- */
+    const detail = name === 'mobile'
+      ? [
+        '.search-trigger .kbd-hint { display: none; }',
+        '.hero-title { font-size: 22px; }',
+        '.post-title { font-size: 17.5px; }',
+        '.hero-panel { padding: 24px 20px; }',
+        '.hero-content { flex-direction: column; align-items: flex-start; }',
+        '.hero-avatar { width: 54px; height: 54px; }',
+        '.post-card { border-radius: var(--xfm-radius); }',
+        '.post-card.has-cover .post-body, .post-body { padding: 18px 18px 20px; }',
+        '.post-view, .page-view { padding: 22px 18px 24px; border-radius: var(--xfm-radius); }',
+        '.post-cover-hero { margin: -22px -18px 20px; aspect-ratio: 16 / 10; min-height: 180px; border-radius: var(--xfm-radius) var(--xfm-radius) 0 0; }',
+        '.cover-hero-inner { padding: 18px; }',
+        '.post-view-meta { gap: 6px 12px; font-size: 12.5px; }',
+        '.post-nav { grid-template-columns: 1fr; }',
+        '.post-nav-item.is-next { text-align: left; align-items: flex-start; }',
+        '.related-grid, .links-grid, .post-layout-grid { grid-template-columns: 1fr; }',
+        '.category-cloud { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }',
+        '.xfm-row { grid-template-columns: 1fr; }',
+        '.xfm-col, .xfm-row > .xfm-col:not([style]) { grid-column: span 12; }',
+        '.archive-item { flex-wrap: wrap; gap: 4px 10px; }',
+        '.archive-title { flex-basis: 100%; order: 2; white-space: normal; }',
+        '.post-layout-list .post-card { flex-direction: column; align-items: stretch; gap: 8px; padding: 14px 16px; }',
+        '.post-layout-list .post-body { flex-direction: column; align-items: flex-start; gap: 6px; }',
+        '.post-layout-list .post-title { order: 0; flex: 1 1 auto; }',
+        '.post-layout-list .post-stat { margin-left: 0; }',
+        '.error-404 { padding-top: 40px; }',
+        '.search-modal { padding: 0; }',
+        '.search-panel { max-height: 100vh; height: 100vh; border-radius: 0; border: 0; }',
+        '.xfm-content blockquote { padding: 0.85em 1em; }',
+        '.footer-main { flex-direction: column; align-items: flex-start; }',
+        '.footer-bottom { justify-content: flex-start; }',
+        '.code-wrap table { display: block; overflow-x: auto; }',
+        '.table-wrap { margin-right: -18px; margin-left: -18px; padding: 0 18px; }'
+      ]
+      : name === 'tablet'
+        ? [
+          '.search-trigger .kbd-hint { display: none; }',
+          '.hero-stats { width: 100%; }',
+          '.hero-stat { flex: 1 1 0; min-width: 0; }',
+          '.post-card.has-cover { flex-direction: column; }',
+          '.post-card.has-cover .post-cover { width: 100%; max-width: none; aspect-ratio: 16 / 9; }',
+          '.post-card.has-cover.is-flip .post-cover { order: 0; }',
+          '.post-card.has-cover .post-cover img { min-height: 0; height: 100%; }',
+          '.xfm-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }'
+        ]
+        : [];
+    detail.forEach(function (rule) {
+      out.push(p + rule);
+    });
+  });
+
+  /* ------------------------------------------------------------------ *
+   * 3. 与档位无关、但依赖设备能力的降级规则
+   * ------------------------------------------------------------------ */
+  if (A.touch_target > 0) {
+    out.push('@media (pointer: coarse) {');
+    out.push('  .nav-link, .nav-sub-link, .drawer-link, .xfm-nav-link,');
+    out.push('  .toc-link, .tagcloud-item, .widget-link, .page-btn {');
+    out.push('    min-height: ' + A.touch_target + 'px;');
+    out.push('  }');
+    out.push('  .icon-btn { width: ' + Math.max(A.touch_target, 38) + 'px; height: ' + Math.max(A.touch_target, 38) + 'px; }');
+    out.push('}');
+  }
+
+  if (A.safe_area) {
+    out.push('@supports (padding: env(safe-area-inset-left)) {');
+    out.push('  .site-header, .content-wrap, .footer-inner {');
+    out.push('    padding-left: max(var(--gutter), env(safe-area-inset-left));');
+    out.push('    padding-right: max(var(--gutter), env(safe-area-inset-right));');
+    out.push('  }');
+    out.push('  .drawer { padding-bottom: env(safe-area-inset-bottom); }');
+    out.push('  .back-to-top {');
+    out.push('    bottom: calc(20px + env(safe-area-inset-bottom));');
+    out.push('    right: calc(20px + env(safe-area-inset-right));');
+    out.push('  }');
+    out.push('  .drawer-head, .search-panel-foot { padding-top: env(safe-area-inset-top); }');
+    out.push('}');
+  }
+
+  if (A.compact_height) {
+    out.push('@media (max-height: 480px) and (max-width: ' + A.boundaries.tablet_max + 'px) {');
+    out.push('  :root { --xfm-nav-h: 50px; }');
+    out.push('  .hero-panel { padding: 16px 18px; }');
+    out.push('  .hero-panel.is-collapsed { display: none; }');
+    out.push('  .site-content, .content-wrap { padding-top: 12px; padding-bottom: 12px; }');
+    out.push('  .post-view, .page-view { padding: 18px 18px 20px; }');
+    out.push('  .search-panel { max-height: 92vh; }');
+    out.push('  .site-nav-inner { max-height: 200px; }');
+    out.push('  .back-to-top { bottom: 12px; right: 12px; }');
+    out.push('}');
+  }
+
+  out.push('@media (hover: none) {');
+  out.push('  .nav-item.has-children:hover .nav-submenu { display: none; }');
+  out.push('  .post-card:hover, .widget:hover, .hero-panel:hover { transform: none; }');
+  out.push('}');
+%><style id="xfm-adaptive-style">
+<%- out.join('\n') %>
+</style>

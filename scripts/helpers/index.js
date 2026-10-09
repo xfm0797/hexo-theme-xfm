@@ -187,54 +187,200 @@ module.exports = function (hexo) {
     return Math.max(1, Math.round(words / wpm));
   });
 
-  /**
-   * 归一化后的响应式配置。
-   * 断点补全与递减纠正只在这里做一次，模板与样式生成器共用同一份结果，
-   * 避免 <html data-bp-sm> 与生成的 @media 不一致。
-   */
-  register('xfm_breakpoints', function () {
-    const pick = function (v, dft, min, max) {
+  /* ------------------------------------------------------------------ *
+   * 自适应档位（Adaptive）
+   * 归一化只做一次：boot 探测脚本、样式生成器、模板共用同一份结果，
+   * 避免 <html data-tier> 与生成的档位规则对不上。
+   * ------------------------------------------------------------------ */
+  const TIER_ORDER = ['mobile', 'tablet', 'desktop'];
+  const TIER_DEFAULTS = {
+    mobile: {
+      max_width: 767, layout: 'single', nav: 'drawer',
+      sidebar: 'offcanvas', toc: 'panel', fluid: false,
+      density: 'compact', disable: []
+    },
+    tablet: {
+      max_width: 1079, layout: 'two-column', nav: 'drawer',
+      sidebar: 'inline', toc: 'hide', fluid: false,
+      density: 'comfortable', disable: []
+    },
+    desktop: {
+      min_width: 1080, layout: 'three-column', nav: 'bar',
+      sidebar: 'sticky', toc: 'sticky', fluid: false,
+      density: 'comfortable', disable: []
+    }
+  };
+  /* 组件开关：配置里的 disable 键 → 真实选择器 */
+  const COMPONENT_SELECTOR = {
+    hero: '.hero-panel',
+    cover: '.post-cover, .post-cover-hero',
+    related: '.post-related',
+    sidebar: '.widget-column',
+    toc: '.toc-column',
+    footer_stats: '.footer-stats',
+    brand_text: '.brand-text',
+    comments: '#xfm-comments',
+    share: '.post-share'
+  };
+
+  function firstDefined() {
+    for (let i = 0; i < arguments.length; i++) {
+      const v = arguments[i];
+      if (v !== undefined && v !== null && v !== '') return v;
+    }
+    return undefined;
+  }
+
+  function adaptiveConfig() {
+    const themeCfg = (hexo.theme && hexo.theme.config) || {};
+    const siteCfg = hexo.config || {};
+    // legacy：仍在用旧 responsive 配置的站点，自动推导成档位，升级不断裂。
+    // 只有「站点显式写过 responsive」才启用推导，否则以主题自带的 adaptive 为准。
+    const legacy = Object.assign({}, themeCfg.responsive || {}, siteCfg.responsive || {});
+    const legacySite = Object.assign({}, (siteCfg.theme_config || {}).responsive || {}, siteCfg.responsive || {});
+    const useLegacy = Object.keys(legacySite).length > 0;
+    const hasLegacy = useLegacy;
+    const cfg = Object.assign({}, themeCfg.adaptive || {}, siteCfg.adaptive || {});
+    const legacyBp = Object.assign({}, legacy.breakpoints || {});
+
+    const num = (v, dft, min, max) => {
       const x = Number(v);
-      if (!isFinite(x)) return dft;
+      if (v === '' || v === null || v === undefined || !isFinite(x)) return dft;
       return Math.min(max, Math.max(min, Math.round(x)));
     };
-    const themeRwd =
-      (hexo.theme && hexo.theme.config && hexo.theme.config.responsive) || {};
-    const siteRwd = (hexo.config && hexo.config.responsive) || {};
-    const rwd = Object.assign({}, themeRwd, siteRwd);
+    const oneOf = (v, allowed, dft) => (allowed.indexOf(v) > -1 ? v : dft);
+    const bool = (v, dft) => (v === undefined ? dft : v !== false && v !== 'false');
 
-    const rawBp = Object.assign({}, themeRwd.breakpoints || {}, siteRwd.breakpoints || {});
-    const bp = {
-      xxl: pick(rawBp.xxl, 1600, 1200, 2600),
-      xl: pick(rawBp.xl, 1280, 1000, 2200),
-      lg: pick(rawBp.lg, 1080, 800, 2000),
-      md: pick(rawBp.md, 900, 700, 1800),
-      sm: pick(rawBp.sm, 768, 400, 1200),
-      xs: pick(rawBp.xs, 480, 320, 900)
+    const strategy = oneOf(cfg.strategy, ['adaptive', 'responsive', 'fixed'], 'adaptive');
+    const enable = bool(firstDefined(cfg.enable, legacy.enable), true);
+
+    const legacySm = num(legacyBp.sm, 768, 400, 1200);
+    const legacyLg = num(legacyBp.lg, 1080, 800, 2000);
+    const legacySide = oneOf(legacy.mobile_sidebar, ['sticky', 'inline', 'offcanvas', 'hide'], 'offcanvas');
+    const legacyToc = legacy.mobile_toc === 'hide' ? 'hide' : 'panel';
+    const legacyFluid = bool(legacy.fluid_typography, true);
+
+    const rawTiers = Object.assign(
+      {},
+      (themeCfg.adaptive && themeCfg.adaptive.tiers) || {},
+      (siteCfg.adaptive && siteCfg.adaptive.tiers) || {}
+    );
+
+    // 边界纠正：mobile < tablet < desktop，用户填反了自动修正而不是让规则互相覆盖
+    const mobileMax = useLegacy
+      ? legacySm - 1
+      : num(
+        firstDefined((rawTiers.mobile || {}).max_width, (rawTiers.mobile || {}).max),
+        TIER_DEFAULTS.mobile.max_width, 320, 1400
+      );
+    const tabletMax = num(
+      useLegacy ? legacyLg - 1 : firstDefined((rawTiers.tablet || {}).max_width, (rawTiers.tablet || {}).max),
+      useLegacy ? legacyLg - 1 : TIER_DEFAULTS.tablet.max_width,
+      mobileMax + 1, 2200
+    );
+    const desktopMin = Math.max(
+      tabletMax + 1,
+      num(
+        firstDefined((rawTiers.desktop || {}).min_width, (rawTiers.desktop || {}).min),
+        TIER_DEFAULTS.desktop.min_width, tabletMax + 1, 3000
+      )
+    );
+
+    const makeTier = (name, raw, dft, min, max) => {
+      raw = raw || {};
+      const isMobile = name === 'mobile';
+      return {
+        name: name,
+        min_width: min,
+        max_width: max,
+        layout: oneOf(raw.layout, ['single', 'two-column', 'three-column'], dft.layout),
+        nav: oneOf(raw.nav, ['bar', 'drawer'], dft.nav),
+        sidebar: oneOf(
+          raw.sidebar, ['sticky', 'inline', 'offcanvas', 'hide'],
+          isMobile && hasLegacy ? legacySide : dft.sidebar
+        ),
+        toc: oneOf(
+          raw.toc, ['sticky', 'panel', 'hide'],
+          isMobile && hasLegacy ? legacyToc : dft.toc
+        ),
+        container_width: num(raw.container_width, 0, 0, 3000),
+        content_width: num(raw.content_width, 0, 0, 2000),
+        fluid: raw.fluid === undefined
+          ? Boolean(hasLegacy && legacyFluid && name !== 'desktop')
+          : raw.fluid !== false && raw.fluid !== 'false',
+        density: oneOf(raw.density, ['comfortable', 'compact'], dft.density),
+        disable: (Array.isArray(raw.disable) ? raw.disable : []).filter((k) => COMPONENT_SELECTOR[k])
+      };
     };
-    // 保证断点严格递减，用户填错时自动纠正而不是让规则互相覆盖
-    const order = ['xxl', 'xl', 'lg', 'md', 'sm', 'xs'];
-    for (let i = 1; i < order.length; i++) {
-      if (bp[order[i]] >= bp[order[i - 1]]) bp[order[i]] = bp[order[i - 1]] - 1;
-    }
+
+    const tiers = {
+      mobile: makeTier('mobile', rawTiers.mobile, TIER_DEFAULTS.mobile, 0, mobileMax),
+      tablet: makeTier('tablet', rawTiers.tablet, TIER_DEFAULTS.tablet, mobileMax + 1, tabletMax),
+      desktop: makeTier('desktop', rawTiers.desktop, TIER_DEFAULTS.desktop, desktopMin, 0)
+    };
+
+    const detectRaw = cfg.detect || {};
+    const full = strategy === 'adaptive';
+    const detect = {
+      width: bool(detectRaw.width, true),
+      ua: full && bool(detectRaw.ua, true),
+      touch: full && bool(detectRaw.touch, true),
+      dpr: full && bool(detectRaw.dpr, true),
+      orientation: bool(detectRaw.orientation, true),
+      upgrade_large_screen: bool(detectRaw.upgrade_large_screen, true)
+    };
 
     return {
-      enable: rwd.enable !== false,
-      breakpoints: bp,
-      mobile_sidebar:
-        rwd.mobile_sidebar === 'inline' || rwd.mobile_sidebar === 'hide'
-          ? rwd.mobile_sidebar
-          : 'offcanvas',
-      mobile_toc: rwd.mobile_toc === 'hide' ? 'hide' : 'widget',
-      fluid_typography: rwd.fluid_typography !== false,
-      fluid_min_width: pick(rwd.fluid_min_width, 360, 240, 1200),
-      fluid_max_width: pick(rwd.fluid_max_width, 1440, 600, 3000),
-      touch_target: pick(rwd.touch_target, 44, 0, 96),
-      safe_area: rwd.safe_area !== false,
-      compact_height: rwd.compact_height !== false,
-      user_zoom: rwd.user_zoom !== false,
-      container_width: pick(rwd.container_width, 0, 0, 3000),
-      content_width: pick(rwd.content_width, 0, 0, 2000)
+      enable: enable,
+      strategy: strategy,
+      default_tier: oneOf(cfg.default_tier, TIER_ORDER, 'desktop'),
+      remember: bool(cfg.remember, true),
+      detect: detect,
+      order: TIER_ORDER,
+      tiers: tiers,
+      boundaries: { mobile_max: mobileMax, tablet_max: tabletMax, desktop_min: desktopMin },
+      component_selector: COMPONENT_SELECTOR,
+      touch_target: num(firstDefined(cfg.touch_target, legacy.touch_target), 44, 0, 96),
+      safe_area: bool(firstDefined(cfg.safe_area, legacy.safe_area), true),
+      compact_height: bool(firstDefined(cfg.compact_height, legacy.compact_height), true),
+      user_zoom: bool(firstDefined(cfg.user_zoom, legacy.user_zoom), true),
+      fluid_min_width: num(firstDefined(cfg.fluid_min_width, legacy.fluid_min_width), 360, 240, 1200),
+      fluid_max_width: num(firstDefined(cfg.fluid_max_width, legacy.fluid_max_width), 1440, 600, 3000),
+      container_width: num(firstDefined(cfg.container_width, legacy.container_width), 0, 0, 3000),
+      content_width: num(firstDefined(cfg.content_width, legacy.content_width), 0, 0, 2000)
+    };
+  }
+
+  register('xfm_adaptive', adaptiveConfig);
+
+  /**
+   * 旧版响应式配置（由 adaptive 派生，保留向后兼容）。
+   * 新站点请直接用 adaptive + xfm_adaptive。
+   */
+  register('xfm_breakpoints', function () {
+    const A = adaptiveConfig();
+    const b = A.boundaries;
+    return {
+      enable: A.enable,
+      breakpoints: {
+        xxl: 1600,
+        xl: Math.max(b.desktop_min, 1280),
+        lg: b.tablet_max + 1,
+        md: Math.max(b.mobile_max + 1, Math.round((b.tablet_max + b.mobile_max + 2) / 2)),
+        sm: b.mobile_max + 1,
+        xs: Math.max(320, Math.round((b.mobile_max + 1) * 0.62))
+      },
+      mobile_sidebar: A.tiers.mobile.sidebar,
+      mobile_toc: A.tiers.mobile.toc === 'hide' ? 'hide' : 'widget',
+      fluid_typography: Boolean(A.tiers.mobile.fluid || A.tiers.tablet.fluid || A.tiers.desktop.fluid),
+      fluid_min_width: A.fluid_min_width,
+      fluid_max_width: A.fluid_max_width,
+      touch_target: A.touch_target,
+      safe_area: A.safe_area,
+      compact_height: A.compact_height,
+      user_zoom: A.user_zoom,
+      container_width: A.container_width,
+      content_width: A.content_width
     };
   });
 

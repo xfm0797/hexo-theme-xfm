@@ -1,0 +1,111 @@
+<%
+  /*
+   * 自适应档位探测（首屏同步执行）
+   * 只做一件事：在页面渲染前判定设备档位并写到 <html data-tier>，
+   * 之后所有布局都由 [data-tier="..."] 的档位样式接管。
+   * 放在 <head> 最前，避免先渲染桌面布局再跳变造成的闪烁。
+   */
+  const A = xfm_adaptive();
+  const boot = {
+    enable: A.enable,
+    strategy: A.strategy,
+    default_tier: A.default_tier,
+    remember: A.remember,
+    boundaries: A.boundaries,
+    detect: {
+      width: A.detect.width,
+      ua: A.detect.ua,
+      touch: A.detect.touch,
+      dpr: A.detect.dpr,
+      orientation: A.detect.orientation,
+      upgrade: A.detect.upgrade_large_screen
+    }
+  };
+%><script id="xfm-adaptive-boot">
+(function () {
+  var R = document.documentElement;
+  var CFG = <%- JSON.stringify(boot) %>;
+  var KEY = 'xfm-tier';
+  var TIERS = ['mobile', 'tablet', 'desktop'];
+  var B = CFG.boundaries;
+
+  function readManual() {
+    try {
+      var m = location.search.match(/[?&]__tier=([a-zA-Z]+)/);
+      if (m && TIERS.indexOf(m[1]) > -1) return m[1];
+      if (CFG.remember) {
+        var saved = localStorage.getItem(KEY);
+        if (saved && TIERS.indexOf(saved) > -1) return saved;
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  function uaTier() {
+    if (!CFG.detect.ua) return null;
+    var ua = navigator.userAgent || '';
+    if (/iPhone|iPod|Android[^;]*Mobile|Windows Phone|IEMobile|Opera M(ob|in)i|BB10|BlackBerry/i.test(ua)) return 'mobile';
+    if (/iPad|Tablet|PlayBook|Silk|Kindle|Nexus (7|9|10)|SM-T|Android/i.test(ua)) return 'tablet';
+    return null;
+  }
+
+  function widthTier(w) {
+    if (w <= B.mobile_max) return 'mobile';
+    if (w <= B.tablet_max) return 'tablet';
+    return 'desktop';
+  }
+
+  function resolve() {
+    if (!CFG.enable) return CFG.default_tier;
+    var manual = readManual();
+    if (manual) return manual;
+    if (CFG.strategy === 'fixed') return CFG.default_tier;
+    var w = window.innerWidth || R.clientWidth || 0;
+    var wt = widthTier(w);
+    if (CFG.strategy !== 'adaptive') return wt;
+    var ut = uaTier();
+    if (ut === 'mobile') return 'mobile';
+    if (ut === 'tablet') {
+      if (wt === 'desktop' && CFG.detect.upgrade) return 'desktop';
+      return wt === 'mobile' ? 'mobile' : 'tablet';
+    }
+    return wt;
+  }
+
+  function apply() {
+    var tier = resolve();
+    var prev = R.getAttribute('data-tier');
+    R.setAttribute('data-tier', tier);
+    if (CFG.detect.touch) {
+      var coarse = window.matchMedia
+        ? window.matchMedia('(pointer: coarse)').matches
+        : ('ontouchstart' in window);
+      R.setAttribute('data-input', coarse ? 'touch' : 'pointer');
+    }
+    if (CFG.detect.dpr) {
+      R.setAttribute('data-dpr', String(Math.round((window.devicePixelRatio || 1) * 100) / 100));
+    }
+    if (CFG.detect.orientation) {
+      R.setAttribute('data-orientation', window.innerHeight >= window.innerWidth ? 'portrait' : 'landscape');
+    }
+    if (prev && prev !== tier && typeof CustomEvent === 'function') {
+      try {
+        document.dispatchEvent(new CustomEvent('xfm:tierchange', { detail: { tier: tier, prev: prev } }));
+      } catch (e) {}
+    }
+    return tier;
+  }
+
+  window.__xfmApplyTier = apply;
+  apply();
+
+  if (CFG.enable && CFG.strategy !== 'fixed') {
+    var tid = null;
+    window.addEventListener('resize', function () {
+      clearTimeout(tid);
+      tid = setTimeout(apply, 120);
+    }, { passive: true });
+    window.addEventListener('orientationchange', function () { setTimeout(apply, 220); });
+  }
+})();
+</script>

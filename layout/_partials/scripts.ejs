@@ -24,6 +24,19 @@
       foldCode: <%= Number((theme.code_block && theme.code_block.max_height) || -1) > 0 ? 'true' : 'false' %>,
       toc: <%= theme.post && theme.post.toc !== false ? 'true' : 'false' %>
     },
+    adaptive: <%- JSON.stringify((function () {
+      var A = xfm_adaptive();
+      var slim = { enable: A.enable, strategy: A.strategy, default_tier: A.default_tier, remember: A.remember, tiers: {} };
+      A.order.forEach(function (n) {
+        var t = A.tiers[n];
+        slim.tiers[n] = {
+          layout: t.layout, nav: t.nav, sidebar: t.sidebar,
+          toc: t.toc, fluid: t.fluid, density: t.density,
+          min_width: t.min_width, max_width: t.max_width
+        };
+      });
+      return slim;
+    })()) %>,
     i18n: {
       copy: '<%= __('common.copy') %>',
       copied: '<%= __('common.copied') %>',
@@ -43,6 +56,7 @@
   };
 </script>
 
+<script src="<%- url_for('/js/adaptive.js') %>"></script>
 <script src="<%- url_for('/js/core.js') %>"></script>
 <script src="<%- url_for('/js/toc.js') %>"></script>
 <% if (theme.search && theme.search.enable !== false) { %>

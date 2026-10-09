@@ -1,11 +1,22 @@
 /* ==========================================================================
-   XFM Theme · responsive.css
-   与断点无关的适配：动效降级 / 打印
+   XFM Theme · adaptive.css
+   与「档位」无关的两类适配：动效降级 / 打印
 
-   注意：所有宽度断点（xxl ~ xs）相关的适配均由
-   layout/_partials/responsive-style.ejs 依据 _config.yml 的
-   responsive.breakpoints 动态生成，修改断点请改配置，不要在本文件里写 @media 宽度。
+   注意：mobile / tablet / desktop 三档的布局、令牌、组件形态全部由
+   layout/_partials/adaptive-style.ejs 依据 _config.yml 的 adaptive 一节
+   动态生成为 html[data-tier="…"] 规则，改档位请改配置，不要在本文件里写宽度。
+   本文件只保留无法归入档位的规则。
    ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   档位切换：避免跨档瞬间跳变时的生硬闪烁
+   -------------------------------------------------------------------------- */
+html[data-tier] .site-body,
+html[data-tier] .site-nav,
+html[data-tier] .toc-column,
+html[data-tier] .widget-column {
+  transition: none;
+}
 
 /* --------------------------------------------------------------------------
    降级：用户偏好减少动效

@@ -1,6 +1,8 @@
 <meta charset="utf-8">
+<% /* 档位探测必须最先执行：先定档，再渲染布局，避免档位跳变闪烁 */ %>
+<%- partial('_partials/adaptive-boot') %>
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover<%= xfm_breakpoints().user_zoom ? '' : ', maximum-scale=1, user-scalable=no' %>">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover<%= xfm_adaptive().user_zoom ? '' : ', maximum-scale=1, user-scalable=no' %>">
 <meta name="renderer" content="webkit">
 <meta name="format-detection" content="telephone=no">
 
@@ -99,8 +101,8 @@
 <link rel="stylesheet" href="<%- url_for('/css/components.css') %>">
 <link rel="stylesheet" href="<%- url_for('/css/post.css') %>">
 <link rel="stylesheet" href="<%- url_for('/css/plugins.css') %>">
-<link rel="stylesheet" href="<%- url_for('/css/responsive.css') %>">
-<%- partial('_partials/responsive-style') %>
+<link rel="stylesheet" href="<%- url_for('/css/adaptive.css') %>">
+<%- partial('_partials/adaptive-style') %>
 <% if (theme.appearance && theme.appearance.font_family) { %>
 <link rel="stylesheet" href="<%= theme.appearance.font_family %>">
 <% } %>

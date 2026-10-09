@@ -52,43 +52,77 @@ appearance:
   site_title: true
 
 # ==============================================================================
-# 响应式
+# 自适应式响应（Adaptive）
 # ==============================================================================
-responsive:
-  # 是否启用响应式适配。关闭后始终保持桌面布局（适合纯桌面场景或嵌入iframe）
+# 说明：主题不是「同一套 DOM 靠媒体查询连续缩放」，而是先识别设备档位
+#       （mobile / tablet / desktop），再交付该档位专属的布局结构 ——
+#       档位之间是跳变，不是渐变。档位边界、每档形态全部在这里配置。
+adaptive:
+  # 是否启用档位自适应。关闭后始终使用 default_tier 对应的布局
   enable: true
+  # 策略:
+  #   adaptive   —— 综合 UA / 触摸 / 像素密度 / 宽度判定设备档位（推荐）
+  #   responsive —— 只按视口宽度实时映射档位（等价于传统媒体查询的连续效果）
+  #   fixed      —— 不做探测，恒定使用 default_tier
+  strategy: adaptive
+  # 探测失败时的兜底档位，同时也是 fixed 策略使用的档位
+  default_tier: desktop
+  # 是否记住手动切换的档位（写入 localStorage，可用于「切换到桌面版」）
+  remember: true
 
-  # ---- 断点宽度（px）。改动后全站适配随之变化，无需改模板 ----
-  breakpoints:
-    xxl: 1600     # 超宽屏：放宽容器与侧栏
-    xl: 1280      # 小桌面：收紧间距
-    lg: 1080      # 平板横屏：主导航折叠为抽屉
-    md: 900       # 平板竖屏：侧边挂件回落到正文下方
-    sm: 768       # 手机：单栏布局
-    xs: 480       # 窄屏：进一步压缩留白
+  # ---- 探测维度（strategy: responsive 时自动只保留 width）----
+  detect:
+    width: true               # 视口宽度
+    ua: true                  # UA 设备指纹（iPhone / iPad / Android 平板…）
+    touch: true               # 触摸能力（pointer: coarse）
+    dpr: true                 # 像素密度
+    orientation: true         # 横竖屏（写入 data-orientation）
+    # UA 命中平板但宽度已达桌面档时，是否升级为 desktop
+    upgrade_large_screen: true
 
-  # 整站容器最大宽度（px）。留空使用 1280
-  container_width:
-  # 正文（阅读区）最大宽度（px）。留空使用 780
-  content_width:
+  # ---- 三档定义 ----
+  # 每档独立决定：边界、栏数、导航形态、侧栏形态、目录形态、容器宽度、
+  #               是否启用流式字号、信息密度、以及要关闭的组件
+  tiers:
+    mobile:
+      max_width: 767          # ≤ 该宽度（或 UA 命中手机）判为 mobile
+      layout: single          # single / two-column / three-column
+      nav: drawer             # bar(顶部菜单) / drawer(抽屉)
+      sidebar: offcanvas      # offcanvas(抽屉) / inline(内联折叠) / hide / sticky
+      toc: panel              # panel(正文顶部折叠面板) / sticky / hide
+      container_width:        # 留空用该档默认值
+      content_width:
+      fluid: false            # 该档是否启用流式字号（true = 档内平滑缩放）
+      density: compact        # comfortable / compact（紧凑档压缩留白）
+      # 该档关闭的组件，可选: hero cover related sidebar toc footer_stats
+      #                       brand_text comments share
+      disable: []
 
-  # 窄屏（≤ sm）下笔记 / 文档模式的左侧栏处理方式
-  #   offcanvas —— 抽屉式，由悬浮按钮唤起（推荐，不挤占正文）
-  #   inline    —— 折叠面板内联到正文上方
-  #   hide      —— 直接隐藏，仅在导航栏提供入口
-  mobile_sidebar: offcanvas
+    tablet:
+      max_width: 1079         # mobile.max_width + 1 ~ 该值为 tablet
+      layout: two-column
+      nav: drawer
+      sidebar: inline
+      toc: hide
+      container_width:
+      content_width:
+      fluid: false
+      density: comfortable
+      disable: []
 
-  # 窄屏（≤ sm）下右侧目录的处理方式
-  #   widget —— 折叠面板内联到正文顶部
-  #   hide   —— 直接隐藏
-  mobile_toc: widget
+    desktop:
+      min_width: 1080         # ≥ 该宽度判为 desktop（自动 ≥ tablet.max_width + 1）
+      layout: three-column
+      nav: bar
+      sidebar: sticky
+      toc: sticky
+      container_width:
+      content_width:
+      fluid: false
+      density: comfortable
+      disable: []
 
-  # 标题与正文字号是否随视口宽度平滑缩放（clamp）
-  fluid_typography: true
-  # 流式字号的下限 / 上限（px），仅在 fluid_typography 开启时生效
-  fluid_min_width: 360
-  fluid_max_width: 1440
-
+  # ---- 与档位无关的通用适配 ----
   # 触摸设备的最小可点击区域边长（px），建议 ≥ 44
   touch_target: 44
   # 是否适配刘海屏 / 手势条安全区
@@ -97,6 +131,9 @@ responsive:
   compact_height: true
   # 两根手指缩放：关闭可避免移动端误触排版错乱，但影响无障碍
   user_zoom: true
+  # 流式字号（fluid: true 的档位）的插值参考宽度
+  fluid_min_width: 360
+  fluid_max_width: 1440
 
 # ==============================================================================
 # 导航栏

@@ -129,22 +129,34 @@
     if (e.key === 'Escape') setSideNav(false);
   });
 
-  // 视口放大回桌面宽度时复位，防止抽屉状态残留
-  // 阈值取自 _config.yml 的 responsive.breakpoints.sm，由模板写入 <html data-bp-sm>
-  if (typeof window.matchMedia === 'function') {
-    var smNum = parseInt(document.documentElement.getAttribute('data-bp-sm'), 10);
-    var sideNavBp = (isFinite(smNum) && smNum > 0 ? smNum : 768) + 1;
-    var wideMQ = window.matchMedia('(min-width: ' + sideNavBp + 'px)');
-    var onWide = function (e) {
-      if (e.matches) setSideNav(false);
-    };
-    if (wideMQ.addEventListener) wideMQ.addEventListener('change', onWide);
-    else if (wideMQ.addListener) wideMQ.addListener(onWide);
-  }
+  /* ------------------------------------------------------------------ *
+   * 档位自适应：跨档时复位抽屉等「窄屏专属」状态
+   * 档位由 adaptive.js 判定（<html data-tier>），这里只消费结果
+   * ------------------------------------------------------------------ */
+  var AD = (window.XFM && window.XFM.adaptive) || null;
+  var tierOf = AD && AD.tier ? AD.tier : function () { return 'desktop'; };
+  var variantOf = AD && AD.variant ? AD.variant : function () { return 'sticky'; };
+
+  document.addEventListener('xfm:tierchange', function (e) {
+    var t = (e.detail && e.detail.tier) || tierOf();
+    if (t !== 'mobile') setSideNav(false);
+    if (variantOf('toc') !== 'panel') collapseToc(false);
+  });
+
+  // 初始化：非手机档不留抽屉状态
+  if (tierOf() !== 'mobile') setSideNav(false);
 
   /* ------------------------------------------------------------------ *
-   * 窄屏目录折叠面板
+   * 目录折叠面板（仅在当前档为 panel 形态时生效）
    * ------------------------------------------------------------------ */
+  function collapseToc(open) {
+    var col = $('#tocColumn');
+    if (!col) return;
+    var head = col.querySelector('.toc-header');
+    col.classList.toggle('is-expanded', !!open);
+    if (head) head.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
   (function () {
     var tocColumn = $('#tocColumn');
     if (!tocColumn) return;
@@ -154,6 +166,8 @@
     header.setAttribute('tabindex', '0');
     header.setAttribute('aria-expanded', 'false');
     header.addEventListener('click', function () {
+      // 仅当该档把目录折叠为面板时才响应，桌面常驻目录不折叠
+      if (variantOf('toc') !== 'panel') return;
       var expanded = tocColumn.classList.toggle('is-expanded');
       header.setAttribute('aria-expanded', expanded ? 'true' : 'false');
     });

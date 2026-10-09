@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <%
-  // 断点唯一来源：与生成 @media 的样式用同一份归一化结果
-  const __R = xfm_breakpoints();
+  // 档位唯一来源：与 boot 探测脚本、档位样式生成器共用同一份归一化结果
+  const __A = xfm_adaptive();
+  // 构建期先把兜底档位写进 data-tier，boot 脚本会在渲染前纠正为真实档位
+  const __fallbackTier = __A.default_tier;
 %>
-<html lang="<%= config.language || 'zh-CN' %>" data-mode="<%= page.mode || theme.mode || 'blog' %>" data-bp-sm="<%= __R.breakpoints.sm %>">
+<html lang="<%= config.language || 'zh-CN' %>" data-mode="<%= page.mode || theme.mode || 'blog' %>" data-tier="<%= __fallbackTier %>" data-tier-strategy="<%= __A.strategy %>">
 <head><%- partial('_partials/head') %></head>
 <%
   const currentMode = page.mode || theme.mode || 'blog';
@@ -12,14 +14,17 @@
   const isContentPage = Boolean(is_post() || is_page());
   const tocEnabled = isContentPage && page.toc !== false && theme.post && theme.post.toc !== false;
   const rightToc = tocEnabled && currentMode !== 'blog' && (currentMode === 'docs' ? theme.docs.toc !== false : theme.notes.toc !== false);
-  const sideMode = __R.mobile_sidebar;
+  // 档位变体：mobile 档决定默认形态，任意档用到抽屉则标记为可抽屉
+  const sideMode = __A.tiers.mobile.sidebar;
+  const canDrawer = __A.order.some(function (n) { return __A.tiers[n].sidebar === 'offcanvas'; });
   const hasSideNav = currentMode === 'docs' || currentMode === 'notes';
   const bodyClass = [
     'mode-' + currentMode,
     hasSidebar ? 'has-sidebar sidebar-' + sidebarPos : 'no-sidebar',
     rightToc ? 'has-inline-toc' : '',
     hasSideNav ? 'side-nav-' + sideMode : '',
-    __R.enable ? '' : 'rwd-off',
+    hasSideNav && canDrawer ? 'side-nav-can-drawer' : '',
+    __A.enable ? '' : 'adaptive-off',
     theme.appearance && theme.appearance.animation === false ? 'no-animation' : ''
   ].filter(Boolean).join(' ');
 %>
@@ -76,9 +81,10 @@
 
   <% if (hasSideNav) { %>
   <div class="sidenav-mask" data-toggle="sidenav"></div>
-  <button class="nav-fab" type="button" data-toggle="sidenav" aria-label="<%= __('toc.title') %>" aria-controls="<%= currentMode === 'docs' ? 'docsNav' : 'notesNav' %>">
+  <% const navFabLabel = currentMode === 'docs' ? __('docs.sidebar') : __('notes.sidebar'); %>
+  <button class="nav-fab" type="button" data-toggle="sidenav" aria-label="<%= navFabLabel %>" aria-controls="<%= currentMode === 'docs' ? 'docsNav' : 'notesNav' %>">
     <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-list"></use></svg>
-    <span class="nav-fab-text"><%= __('toc.title') %></span>
+    <span class="nav-fab-text"><%= navFabLabel %></span>
   </button>
   <% } %>
 
