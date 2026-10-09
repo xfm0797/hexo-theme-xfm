@@ -16,7 +16,7 @@ XFM 是一套面向长期写作的 Hexo 主题：全套设计令牌驱动、深�
   </tr>
 </table>
 
-窄屏下三种模式自动转为单栏，笔记 / 文档的左侧栏收起为抽屉，目录折叠为面板 —— 详见[四、响应式](#四响应式)。
+手机档三种模式自动转为单栏，笔记 / 文档的左侧栏收起为抽屉，目录折叠为面板 —— 详见[四、自适应式响应](#四自适应式响应)。
 
 <table>
   <tr>
@@ -47,7 +47,7 @@ XFM 是一套面向长期写作的 Hexo 主题：全套设计令牌驱动、深�
 | SEO | OG / Twitter Card、canonical、JSON-LD、内置 sitemap.xml 与 robots.txt、404 页 |
 | 阅读体验 | 阅读进度条、返回顶部、平滑滚动、滚动入场动画、文章过时提醒、版权卡、打赏、分享、相关文章 |
 | 国际化 | 内置 zh-CN / en，i18n 文案抽离到 `languages/` |
-| 交付质量 | 响应式六档断点（可配置）、触摸与刘海屏适配、打印样式、动效降级（`prefers-reduced-motion`）、语义化标签 |
+| 交付质量 | 自适应三档（mobile / tablet / desktop，可配置）、触摸与刘海屏适配、打印样式、动效降级（`prefers-reduced-motion`）、语义化标签 |
 
 ---
 
@@ -116,58 +116,115 @@ mode: blog    # blog / notes / docs
 
 ---
 
-## 四、响应式
+## 四、自适应式响应
 
-断点、侧栏行为、触摸尺寸全部集中在 `responsive` 一节。改配置即可，**不要改模板或 CSS**。
+主题用的是**自适应（Adaptive）**，不是传统的「响应式（Responsive）」：
+
+| | 响应式 Responsive | 自适应 Adaptive（本主题） |
+| --- | --- | --- |
+| 判定方式 | `@media (max-width…)` 由浏览器连续匹配 | 先识别设备档位，写入 `<html data-tier>` |
+| 布局变化 | 同一套 DOM 随宽度连续缩放 | 每档一整套独立令牌 + 栏数 + 组件形态，档位之间跳变 |
+| 结构差异 | 靠 CSS 变形 | 导航 / 侧栏 / 目录按档位切换 `bar·drawer`、`sticky·inline·offcanvas·hide`、`sticky·panel·hide` |
+| 配置入口 | 六档断点宽度的数值 | 三档的「边界 + 形态」，形态是可读的枚举而非像素 |
+
+流程只有两步：**`<head>` 里的探测脚本先定档 → 档位样式接管布局**。
+档位边界、每档形态、组件开关全部集中在 `adaptive` 一节，改配置即可，**不要改模板或 CSS**。
 
 ```yaml
-responsive:
-  enable: true               # 关闭则始终保持桌面布局
+adaptive:
+  enable: true               # 关闭则恒定使用 default_tier 的布局
+  strategy: adaptive         # adaptive 设备识别 / responsive 纯宽度 / fixed 固定档
+  default_tier: desktop      # 探测失败兜底档（fixed 策略也用它）
+  remember: true             # 记住手动切换的档位（localStorage）
 
-  breakpoints:               # 六档断点，任意调整
-    xxl: 1600                # 超宽屏：放宽容器与侧栏
-    xl: 1280                 # 小桌面：收紧间距
-    lg: 1080                 # 平板横屏：主导航折叠为抽屉
-    md: 900                  # 平板竖屏：侧边挂件落到正文下方
-    sm: 768                  # 手机：单栏布局
-    xs: 480                  # 窄屏：进一步压缩留白
+  detect:                    # 探测维度（responsive 策略自动只保留 width）
+    width: true              # 视口宽度
+    ua: true                 # UA 设备指纹（iPhone / iPad / Android 平板…）
+    touch: true              # 触摸能力 → data-input="touch"
+    dpr: true                # 像素密度 → data-dpr
+    orientation: true        # 横竖屏 → data-orientation
+    upgrade_large_screen: true   # 大屏平板升级为桌面档
 
-  container_width:           # 整站容器最大宽度，留空用 1280
-  content_width:             # 正文最大宽度，留空用 780
+  tiers:                     # 三档定义
+    mobile:
+      max_width: 767         # ≤ 该宽度或 UA 命中手机
+      layout: single         # single / two-column / three-column
+      nav: drawer            # bar 顶部菜单 / drawer 抽屉
+      sidebar: offcanvas     # offcanvas 抽屉 / inline 内联折叠 / hide 隐藏 / sticky 吸附
+      toc: panel             # panel 折叠面板 / sticky 常驻 / hide 隐藏
+      container_width:       # 留空用该档默认值
+      content_width:
+      fluid: false           # 该档是否启用流式字号（true = 档内平滑缩放）
+      density: compact       # comfortable / compact
+      disable: []            # 该档关闭的组件，见下表
+    tablet:
+      max_width: 1079
+      layout: two-column
+      nav: drawer
+      sidebar: inline
+      toc: hide
+      density: comfortable
+      disable: []
+    desktop:
+      min_width: 1080        # 自动 ≥ tablet.max_width + 1
+      layout: three-column
+      nav: bar
+      sidebar: sticky
+      toc: sticky
+      density: comfortable
+      disable: []
 
-  mobile_sidebar: offcanvas  # offcanvas 抽屉 / inline 内联折叠 / hide 隐藏
-  mobile_toc: widget         # widget 正文顶部折叠面板 / hide 隐藏
-
-  fluid_typography: true     # 标题与正文字号随视口平滑缩放（clamp）
-  fluid_min_width: 360       # 缩放下限参考宽度
-  fluid_max_width: 1440      # 缩放上限参考宽度
-
+  # 与档位无关的通用适配
   touch_target: 44           # 触摸设备最小可点击边长（px）
   safe_area: true            # 适配刘海屏 / 手势条安全区
   compact_height: true       # 矮屏（手机横屏）压缩纵向留白
   user_zoom: true            # 是否允许双指缩放
+  fluid_min_width: 360       # 流式字号插值参考宽度
+  fluid_max_width: 1440
 ```
 
-### 各档位做了什么
+### 默认三档分别交付什么
 
-| 断点 | 行为 |
+| 档位 | 判定 | 栏数 | 导航 | 笔记/文档侧栏 | 目录 | 密度 |
+| --- | --- | --- | --- | --- | --- | --- |
+| mobile | 宽度 ≤ 767 或 UA 命中手机 | 单栏 | 汉堡抽屉 | 抽屉（悬浮按钮唤起） | 正文顶部折叠面板 | compact |
+| tablet | 768 ~ 1079（或平板 UA） | 双栏 | 汉堡抽屉 | 内联折叠卡片 | 隐藏 | comfortable |
+| desktop | ≥ 1080 | 三栏 | 横排菜单 | 吸附左栏 | 吸附右栏 | comfortable |
+
+每档都会拿到一整套独立的设计令牌（容器宽度、栏宽、间距、导航高度、六级字号），
+所以档位切换是**整档跳变**，不会出现「半桌面半手机」的中间态。
+某档把 `fluid: true` 打开后，该档内部才会做平滑缩放（clamp）。
+
+### 组件开关（disable）
+
+每档可独立关掉不合适的组件，可选键：
+
+| 键 | 作用元素 |
 | --- | --- |
-| ≥ xxl | 容器放宽到 1440，三栏间距加大 |
-| ≤ xl | 侧栏宽度与栏间距收紧 |
-| ≤ lg | 顶部菜单折叠为汉堡抽屉；笔记 / 文档侧栏脱离固定定位 |
-| ≤ md | blog 侧边挂件落到正文下方；双列封面卡片转纵向 |
-| ≤ sm | 全局单栏；笔记 / 文档侧栏按 `mobile_sidebar` 处理；目录按 `mobile_toc` 处理 |
-| ≤ xs | 进一步压缩按钮与留白，隐藏非必要文案 |
-| 矮屏 | 高度 ≤ 480 时压缩纵向留白、缩小导航高度 |
-| 触摸设备 | 交互元素补齐到 `touch_target` 指定的最小边长 |
-| 无悬停设备 | 关闭依赖 hover 的浮层，避免移动端点击卡住 |
+| `hero` | 首页欢迎语大卡 |
+| `cover` | 文章封面图 |
+| `related` | 相关文章 |
+| `sidebar` | blog 侧边挂件栏 |
+| `toc` | 右侧目录栏 |
+| `footer_stats` | 页脚统计 |
+| `brand_text` | 导航栏站点标题 |
+| `comments` | 评论区 |
+| `share` | 分享按钮组 |
+
+例：手机档只保留正文 —— `tiers.mobile.disable: [hero, cover, related]`。
 
 ### 实现方式
 
-宽度断点由 `layout/_partials/responsive-style.ejs` 在渲染时**按配置生成** `<style>`，写进 `<head>`；
-`source/css/responsive.css` 只保留与断点无关的部分（打印样式、`prefers-reduced-motion` 降级），避免两处规则互相打架。
+| 环节 | 文件 | 职责 |
+| --- | --- | --- |
+| 定档 | `layout/_partials/adaptive-boot.ejs` | `<head>` 首行同步脚本：解析 URL `?__tier=` / localStorage → UA 指纹 → 宽度，写入 `data-tier`（渲染前完成，无闪烁） |
+| 出样式 | `layout/_partials/adaptive-style.ejs` | 按 `adaptive` 配置生成 `html[data-tier="…"]` 规则，每档令牌 + 栏数 + 形态 |
+| 转结构 | `layout/layout.ejs` | 构建期写入兜底档位与 `side-nav-*` 变体标记，保证抽屉所需节点存在 |
+| 运行时 | `source/js/adaptive.js` | `XFM.adaptive.tier() / setTier() / clearTier() / onTierChange()`，跨档派发 `xfm:tierchange` |
+| 与档位无关 | `source/css/adaptive.css` | 打印样式、`prefers-reduced-motion` 降级 |
 
-窄屏下侧栏抽屉的视口判定阈值也取自配置 —— 通过 `<html data-bp-sm>` 传给前端脚本，JS 不写死断点。
+前端脚本不再写死断点：所有阈值来自配置，由模板注入（`window.XFM.adaptive`）。
+`xfm_breakpoints()` 仍保留，由 `adaptive` 反算旧的六档断点，老站点不升级配置也能直接跑。
 
 ---
 
@@ -317,7 +374,7 @@ themes/xfm
 │   ├── index / post / page / archive / category / tag / 404
 │   └── _partials/           # head / header / footer / sidebar / toc /
 │                            # search / comment / widgets / notes / docs…
-│                            # responsive-style.ejs 按配置生成断点样式
+│                            # adaptive-boot.ejs 定档、adaptive-style.ejs 按配置生成档位样式
 ├── preview/                 # README 用的模式预览图
 ├── scripts/
 │   ├── filters/content.js   # 代码块工具条、标题锚点、表格容器、外链、懒加载
@@ -325,8 +382,8 @@ themes/xfm
 │   ├── helpers/index.js     # 封面、摘要、字数、目录树、笔记/文档导航、计数
 │   └── tags/index.js        # 全部标签插件
 └── source/
-    ├── css/                 # variables · base · layout · components · post · plugins · responsive
-    ├── js/                  # core · toc · search
+    ├── css/                 # variables · base · layout · components · post · plugins · adaptive
+    ├── js/                  # adaptive · core · toc · search
     └── images/              # avatar / favicon / 默认封面（SVG，零外链）
 ```
 
