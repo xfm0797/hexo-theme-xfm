@@ -1,0 +1,154 @@
+/* ==========================================================================
+   XFM Theme · variables.css
+   设计令牌 / 主题变量 / 深浅色方案
+   ========================================================================== */
+
+:root {
+  /* ---- 品牌色（由 head.ejs 注入覆盖） ---- */
+  --xfm-primary: #4f6bed;
+  --xfm-primary-rgb: 79, 107, 237;
+  --xfm-nav-h: 64px;
+  --xfm-radius: 14px;
+  --xfm-radius-sm: 8px;
+  --xfm-radius-lg: 21px;
+
+  /* ---- 中性色阶：浅色 ---- */
+  --c-bg: #f6f7f9;
+  --c-bg-alt: #eef0f4;
+  --c-surface: #ffffff;
+  --c-surface-alt: #fbfbfd;
+  --c-surface-hover: #f4f5f8;
+  --c-elevated: #ffffff;
+
+  --c-border: rgba(17, 24, 39, 0.08);
+  --c-border-strong: rgba(17, 24, 39, 0.14);
+
+  --c-text: #1b1f26;
+  --c-text-soft: #4a5260;
+  --c-text-muted: #767f8e;
+  --c-text-faint: #9aa3b2;
+  --c-text-invert: #ffffff;
+
+  /* ---- 语义色 ---- */
+  --c-success: #16a34a;
+  --c-warning: #d97706;
+  --c-danger: #dc2626;
+  --c-info: #0284c7;
+  --c-success-bg: rgba(22, 163, 74, 0.09);
+  --c-warning-bg: rgba(217, 119, 6, 0.10);
+  --c-danger-bg: rgba(220, 38, 38, 0.09);
+  --c-info-bg: rgba(2, 132, 199, 0.09);
+  --c-primary-bg: rgba(var(--xfm-primary-rgb), 0.09);
+  --c-primary-soft: rgba(var(--xfm-primary-rgb), 0.14);
+
+  /* ---- 阴影 ---- */
+  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-sm: 0 2px 6px rgba(16, 24, 40, 0.05), 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-md: 0 8px 24px rgba(16, 24, 40, 0.07), 0 2px 6px rgba(16, 24, 40, 0.04);
+  --shadow-lg: 0 18px 44px rgba(16, 24, 40, 0.11), 0 4px 12px rgba(16, 24, 40, 0.05);
+  --shadow-xl: 0 32px 68px rgba(16, 24, 40, 0.16), 0 8px 20px rgba(16, 24, 40, 0.06);
+  --shadow-ring: 0 0 0 3px rgba(var(--xfm-primary-rgb), 0.16);
+
+  /* ---- 布局 ---- */
+  --page-max: 1280px;
+  --content-max: 780px;
+  --notes-max: 820px;
+  --nav-w: 286px;
+  --toc-w: 244px;
+  --widget-w: 292px;
+  --gap: 28px;
+  --gutter: 24px;
+
+  /* ---- 字体 ---- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC",
+    Roboto, Helvetica, Arial, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-base: 15px;
+  --fs-md: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 28px;
+  --fs-3xl: 34px;
+
+  --lh-base: 1.75;
+  --lh-tight: 1.4;
+
+  /* ---- 动效 ---- */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-fast: 0.16s;
+  --t-base: 0.26s;
+  --t-slow: 0.42s;
+
+  /* ---- 图层 ---- */
+  --z-nav: 200;
+  --z-drawer: 400;
+  --z-modal: 500;
+  --z-float: 300;
+  --z-lightbox: 600;
+  --z-toast: 700;
+  --z-progress: 800;
+}
+
+/* --------------------------------------------------------------------------
+   深色方案
+   -------------------------------------------------------------------------- */
+html[data-scheme="dark"] {
+  --c-bg: #0e1116;
+  --c-bg-alt: #12161d;
+  --c-surface: #161b23;
+  --c-surface-alt: #1a202a;
+  --c-surface-hover: #1f2630;
+  --c-elevated: #1b212b;
+
+  --c-border: rgba(255, 255, 255, 0.09);
+  --c-border-strong: rgba(255, 255, 255, 0.16);
+
+  --c-text: #e6e9ef;
+  --c-text-soft: #b6bdc9;
+  --c-text-muted: #8b93a1;
+  --c-text-faint: #6b7280;
+  --c-text-invert: #0e1116;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.32);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.36);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.44);
+  --shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.52);
+  --shadow-xl: 0 32px 68px rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
+}
+
+html[data-scheme="light"] {
+  color-scheme: light;
+}
+
+/* --------------------------------------------------------------------------
+   圆角档位
+   -------------------------------------------------------------------------- */
+html[data-radius="sharp"] {
+  --xfm-radius: 6px;
+  --xfm-radius-sm: 3px;
+  --xfm-radius-lg: 10px;
+}
+html[data-radius="round"] {
+  --xfm-radius: 22px;
+  --xfm-radius-sm: 13px;
+  --xfm-radius-lg: 32px;
+}
+
+/* --------------------------------------------------------------------------
+   笔记 / 文档模式的正文宽度覆写
+   -------------------------------------------------------------------------- */
+html[data-mode="notes"] {
+  --content-max: 820px;
+}
+html[data-mode="docs"] {
+  --content-max: 840px;
+}

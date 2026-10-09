@@ -1,0 +1,24 @@
+<%
+  const wechat = theme.post && theme.post.reward_wechat;
+  const alipay = theme.post && theme.post.reward_alipay;
+%><div class="post-reward">
+  <div class="reward-text"><%= (theme.post && theme.post.reward_text) || '' %></div>
+  <button class="reward-btn" type="button" data-reward-toggle>
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-heart"></use></svg>
+    <span><%= __('post.reward') %></span>
+  </button>
+  <div class="reward-panels">
+    <% if (wechat) { %>
+    <div class="reward-panel">
+      <img src="<%= url_for(wechat) %>" alt="wechat" loading="lazy">
+      <span>WeChat</span>
+    </div>
+    <% } %>
+    <% if (alipay) { %>
+    <div class="reward-panel">
+      <img src="<%= url_for(alipay) %>" alt="alipay" loading="lazy">
+      <span>Alipay</span>
+    </div>
+    <% } %>
+  </div>
+</div>

@@ -1,0 +1,114 @@
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="renderer" content="webkit">
+<meta name="format-detection" content="telephone=no">
+
+<%
+  const siteName = config.title || '';
+  let docTitle = siteName;
+  if (page.title) {
+    docTitle = page.title + ' - ' + siteName;
+  } else if (is_home() && config.subtitle) {
+    docTitle = siteName + ' - ' + config.subtitle;
+  }
+
+  let descRaw = page.description || page.excerpt || config.description || '';
+  const desc = truncate(strip_html(descRaw).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(), {
+    length: 160,
+    omission: ''
+  });
+
+  const tagNames = page.tags && page.tags.data ? page.tags.data.map(function (t) { return t.name; }) : [];
+  const keywordList = []
+    .concat(tagNames)
+    .concat(String((theme.seo && theme.seo.keywords) || '').split(/[,，]/))
+    .concat(String(config.keywords || '').split(/[,，]/))
+    .map(function (s) { return s.trim(); })
+    .filter(function (s, i, arr) { return s && arr.indexOf(s) === i; });
+
+  const radiusMap = { sharp: 6, normal: 14, round: 22 };
+  const radius = radiusMap[(theme.appearance && theme.appearance.radius) || 'normal'];
+  const primary = (theme.appearance && theme.appearance.primary) || '#4f6bed';
+  const navHeight = theme.navbar && theme.navbar.height ? theme.navbar.height : 64;
+  const cover = page.cover || page.banner || (theme.seo && theme.seo.og_image) || '';
+%>
+
+<title><%= docTitle %></title>
+<meta name="description" content="<%= desc %>">
+<% if (keywordList.length) { %><meta name="keywords" content="<%= keywordList.join(',') %>"><% } %>
+<meta name="author" content="<%= config.author || '' %>">
+<meta name="theme-color" content="<%= primary %>">
+
+<link rel="icon" href="<%= url_for(theme.favicon || '/images/favicon.svg') %>">
+<link rel="apple-touch-icon" href="<%= url_for(theme.avatar || '/images/avatar.svg') %>">
+<% if (theme.vendors && theme.vendors.rss_navbar !== false) { %>
+<link rel="alternate" type="application/atom+xml" title="<%= siteName %>" href="<%= url_for((theme.vendors && theme.vendors.rss) || '/atom.xml') %>">
+<% } %>
+<% if (theme.seo && theme.seo.canonical !== false) { %>
+<link rel="canonical" href="<%= decodeURI(full_url_for(is_home() ? config.root : (page.path || ''))) %>">
+<% } %>
+<% if (theme.vendors && theme.vendors.pwa) { %>
+<link rel="manifest" href="<%= url_for((theme.vendors && theme.vendors.manifest) || '/manifest.json') %>">
+<% } %>
+
+<% if (theme.seo && theme.seo.og_meta !== false) { %>
+<meta property="og:site_name" content="<%= siteName %>">
+<meta property="og:type" content="<%= page.__post ? 'article' : 'website' %>">
+<meta property="og:title" content="<%= page.title || siteName %>">
+<meta property="og:description" content="<%= desc %>">
+<meta property="og:url" content="<%= decodeURI(full_url_for(is_home() ? '' : (page.path || ''))) %>">
+<% if (cover) { %><meta property="og:image" content="<%= decodeURI(full_url_for(cover)) %>"><% } %>
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<%= page.title || siteName %>">
+<meta name="twitter:description" content="<%= desc %>">
+<% if (cover) { %><meta name="twitter:image" content="<%= decodeURI(full_url_for(cover)) %>"><% } %>
+<% } %>
+<% if (theme.seo && theme.seo.baidu_verify) { %><meta name="baidu-site-verification" content="<%= theme.seo.baidu_verify %>"><% } %>
+<% if (theme.seo && theme.seo.google_verify) { %><meta name="google-site-verification" content="<%= theme.seo.google_verify %>"><% } %>
+
+<script>
+  (function () {
+    try {
+      var scheme = localStorage.getItem('xfm-scheme') || '<%= (theme.appearance && theme.appearance.scheme) || 'auto' %>';
+      var dark = scheme === 'auto'
+        ? window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        : scheme === 'dark';
+      document.documentElement.setAttribute('data-scheme', dark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-scheme-pref', '<%= (theme.appearance && theme.appearance.scheme) || 'auto' %>');
+      if (document.documentElement.scrollTop === 0) {
+        document.documentElement.classList.add('xfm-init');
+      }
+    } catch (e) {}
+  })();
+</script>
+
+<style>
+  :root {
+    --xfm-primary: <%= primary %>;
+    --xfm-nav-h: <%= navHeight %>px;
+    --xfm-radius: <%= radius %>px;
+    --xfm-radius-sm: <%= Math.round(radius * 0.6) %>px;
+    --xfm-radius-lg: <%= Math.round(radius * 1.5) %>px;
+  }
+</style>
+
+<link rel="stylesheet" href="<%- url_for('/css/variables.css') %>">
+<link rel="stylesheet" href="<%- url_for('/css/base.css') %>">
+<link rel="stylesheet" href="<%- url_for('/css/layout.css') %>">
+<link rel="stylesheet" href="<%- url_for('/css/components.css') %>">
+<link rel="stylesheet" href="<%- url_for('/css/post.css') %>">
+<link rel="stylesheet" href="<%- url_for('/css/plugins.css') %>">
+<link rel="stylesheet" href="<%- url_for('/css/responsive.css') %>">
+<% if (theme.appearance && theme.appearance.font_family) { %>
+<link rel="stylesheet" href="<%= theme.appearance.font_family %>">
+<% } %>
+<% if (theme.custom && theme.custom.css) { theme.custom.css.forEach(function (item) { %>
+<link rel="stylesheet" href="<%- url_for('/css/' + item) %>">
+<% }); } %>
+
+<% if (theme.vendors && theme.vendors.math === 'katex') { %>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@<%= theme.vendors.katex_version || '0.16.9' %>/dist/katex.min.css">
+<% } %>
+
+<% if (theme.custom && theme.custom.head) { %><%- theme.custom.head %><% } %>

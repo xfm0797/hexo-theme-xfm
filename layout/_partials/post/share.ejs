@@ -1,0 +1,34 @@
+<%
+  const pageUrl = decodeURI(full_url_for(page.path || ''));
+  const shareTitle = encodeURIComponent(page.title || config.title);
+  const shareUrl = encodeURIComponent(pageUrl);
+  const desc = encodeURIComponent((page.__post ? (xfm_excerpt(page, 60) || '') : config.description) || '');
+  const services = (theme.share && theme.share.services) || ['copy'];
+  const links = {
+    weibo: 'https://service.weibo.com/share/share.php?url=' + shareUrl + '&title=' + shareTitle,
+    qq: 'https://connect.qq.com/widget/shareqq/index.html?url=' + shareUrl + '&title=' + shareTitle + '&desc=' + desc,
+    twitter: 'https://twitter.com/intent/tweet?text=' + shareTitle + '&url=' + shareUrl,
+    facebook: 'https://www.facebook.com/sharer/sharer.php?u=' + shareUrl,
+    telegram: 'https://t.me/share/url?url=' + shareUrl + '&text=' + shareTitle,
+    whatsapp: 'https://api.whatsapp.com/send?text=' + shareTitle + '%20' + shareUrl
+  };
+%><div class="post-share" data-page-url="<%= pageUrl %>">
+  <span class="share-label"><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-share"></use></svg><%= __('post.share_label') %></span>
+  <div class="share-list">
+    <% services.forEach(function (name) { %>
+      <% if (name === 'copy') { %>
+      <button class="share-btn share-copy" type="button" data-share="copy" title="<%= __('common.copy') %>">
+        <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-link"></use></svg>
+      </button>
+      <% } else if (name === 'qrcode') { %>
+      <button class="share-btn share-qrcode" type="button" data-share="qrcode" data-url="<%= pageUrl %>" title="<%= __('misc.qrcodeshare') %>">
+        <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-hash"></use></svg>
+      </button>
+      <% } else if (links[name]) { %>
+      <a class="share-btn share-<%= name %>" href="<%= links[name] %>" target="_blank" rel="noopener noreferrer" title="<%= name %>">
+        <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-<%= name %>"></use></svg>
+      </a>
+      <% } %>
+    <% }); %>
+  </div>
+</div>

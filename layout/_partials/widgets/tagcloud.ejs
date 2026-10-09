@@ -1,0 +1,27 @@
+<%
+  const conf = theme.sidebar.tagcloud || {};
+  const count = conf.count || 30;
+  const colorful = conf.colorful !== false;
+  const list = (site.tags.data || [])
+    .slice()
+    .sort(function (a, b) { return b.length - a.length || a.name.localeCompare(b.name); })
+    .slice(0, count);
+  const maxCount = list.length ? Math.max.apply(null, list.map(function (t) { return t.length; })) : 1;
+%>
+<div class="widget widget-tagcloud">
+  <div class="widget-head">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-tag"></use></svg>
+    <h3><%= __('taxonomy.tags_title') %></h3>
+  </div>
+  <div class="tagcloud">
+    <% list.forEach(function (t) {
+         const weight = Math.max(0.75, Math.min(2, 0.75 + (t.length / maxCount) * 1.05));
+    %>
+    <a class="tagcloud-item<%= colorful ? '' : ' is-plain' %>" href="<%= url_for(t.path) %>" style="--tag-weight:<%= weight.toFixed(2) %>">
+      <span class="tag-name">#<%= t.name %></span>
+      <span class="tag-count"><%= t.length %></span>
+    </a>
+    <% }); %>
+    <% if (!list.length) { %><span class="widget-empty"><%= __('notes.empty_group') %></span><% } %>
+  </div>
+</div>

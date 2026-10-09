@@ -1,0 +1,29 @@
+<% if (page.total > 1) { %>
+<nav class="pagination" role="navigation" aria-label="pagination">
+  <% if (page.prev) { %>
+  <a class="page-btn" href="<%= url_for(page.prev_link) %>" rel="prev" aria-label="prev">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-left"></use></svg>
+    <span class="page-btn-text">Prev</span>
+  </a>
+  <% } %>
+
+  <div class="page-numbers">
+    <% for (let i = 1; i <= page.total; i++) { %>
+      <% if (i === page.current) { %>
+      <span class="page-number is-current"><%= i %></span>
+      <% } else if (i === 1) { %>
+      <a class="page-number" href="<%= url_for('/') %>"><%= i %></a>
+      <% } else { %>
+      <a class="page-number" href="<%= url_for('/page/' + i + '/') %>"><%= i %></a>
+      <% } %>
+    <% } %>
+  </div>
+
+  <% if (page.next) { %>
+  <a class="page-btn" href="<%= url_for(page.next_link) %>" rel="next" aria-label="next">
+    <span class="page-btn-text">Next</span>
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-right"></use></svg>
+  </a>
+  <% } %>
+</nav>
+<% } %>

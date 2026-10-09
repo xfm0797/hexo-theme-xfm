@@ -1,0 +1,130 @@
+# XFM Theme - English language pack
+
+common:
+  home: Home
+  menu: Menu
+  more: More
+  categories: Categories
+  tags: Tags
+  archives: Archives
+  links: Links
+  about: About
+  search: Search
+  sitemap: Sitemap
+  rss: RSS
+  back_to_top: Back to top
+  view_all: View all
+  load_more: Load more
+  no_more: No more posts
+  read_more: Read more
+  collapse: Collapse
+  expand: Expand
+  copy: Copy
+  copied: Copied
+  copy_failed: Copy failed
+  copied_success: Copied to clipboard
+  link_copied: Link copied to clipboard
+  sticky: Pinned
+  featured: Featured
+
+search:
+  placeholder: Search posts, notes and docs…
+  hint_prefix: Press
+  hint_suffix: to search
+  searching: Searching…
+  no_input: Type something to start searching
+  result_count: '%s results found'
+  no_result: Nothing matched. Try another keyword.
+  tips_up_down: Navigate
+  tips_enter: Open
+  tips_esc: Close
+  in_title: Title
+  in_content: Content
+  in_tag: Tag
+  error: Failed to load search index. Please run "hexo g" first.
+  index_empty: Search index is empty
+
+toc:
+  title: Table of Contents
+  empty: No headings here
+  toggle: Toggle outline
+  on_this_page: On this page
+
+post:
+  author: Author
+  published_date: Posted on
+  updated_date: Updated on
+  wordcount: Words
+  words_unit: words
+  reading_time: Reading time
+  min_read: min
+  nav_prev: Previous
+  nav_next: Next
+  nav_none: None
+  copyright: Copyright
+  tags_label: Tags
+  categories_label: Categories
+  share_label: Share
+  reward: Sponsor
+  related: Related posts
+  outdated: This post was last updated %s days ago, some content may be outdated.
+  table_of_contents: Outline
+
+comments:
+  title: Comments
+  loading: Loading comments…
+  switch_theme: Toggle comment theme
+  enable_js: Please enable JavaScript to view comments
+  none: No comments yet
+
+footer:
+  site_runtime: Running for
+  runtime_days: days
+  statistics: '%s posts · %s words'
+  total_posts: Posts
+  total_words: Words
+  all_rights_reserved: All rights reserved
+  powered_by: Powered by Hexo
+  theme_by: Theme
+
+docs:
+  sidebar: Documentation
+  prev_page: Previous
+  next_page: Next
+  last_modified: Last updated on
+  edit_this_page: Edit this page on GitHub
+  no_docs: No sidebar defined. Create source/_data/docs.yml.
+
+notes:
+  sidebar: Notes
+  total_notes: '%s notes'
+  empty_group: No notes yet
+
+archive:
+  title: Archives
+  total_posts: '%s posts in total'
+  timeline_year: ""
+  timeline_month: ""
+
+taxonomy:
+  tags_title: Tag Cloud
+  tags_total: '%s tags'
+  categories_title: Categories
+  categories_total: '%s categories'
+  pages_in: posts
+
+error:
+  404_title: Page Not Found
+  404_subtitle: The page you are looking for may have been moved or deleted.
+  go_home: Back to home
+  recommend: You may also like
+
+widgets:
+  recent_posts: Latest Posts
+
+misc:
+  table_wrap_hint: Scroll horizontally to see the full table
+  image_alt: Image
+  code_expand: Expand code
+  code_fold: Fold code
+  qrcodeshare: Scan to share

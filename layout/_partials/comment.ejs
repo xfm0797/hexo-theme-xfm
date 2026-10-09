@@ -1,0 +1,29 @@
+<%
+  const enabled = theme.comments && theme.comments.enable && page.comments !== false;
+  const type = theme.comments && theme.comments.type ? theme.comments.type : 'giscus';
+  const conf = (theme.comments && theme.comments[type]) || {};
+
+  let payload = { type: type, opts: {} };
+  Object.keys(conf).forEach(function (k) {
+    const v = conf[k];
+    if (Array.isArray(v)) payload.opts[k] = v;
+    else if (v !== null && v !== undefined && v !== '') payload.opts[k] = v;
+  });
+  payload.scheme = (theme.appearance && theme.appearance.scheme) || 'auto';
+  payload.lang = config.language || 'zh-CN';
+  payload.lazyload = theme.comments && theme.comments.lazyload !== false;
+%>
+<% if (enabled) { %>
+<section class="comments-area" id="comments">
+  <div class="section-head">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-note"></use></svg>
+    <h3><%= (theme.comments && theme.comments.title) || __('comments.title') %></h3>
+  </div>
+  <div class="comments-body" id="xfm-comments" data-comment-config="<%= JSON.stringify(payload) %>">
+    <div class="comment-placeholder">
+      <svg class="xfm-icon spin" aria-hidden="true"><use xlink:href="#xfm-i-loader"></use></svg>
+      <span><%= __('comments.loading') %></span>
+    </div>
+  </div>
+</section>
+<% } %>

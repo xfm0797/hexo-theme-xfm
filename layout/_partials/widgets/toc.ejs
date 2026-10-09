@@ -1,0 +1,11 @@
+<%
+  const tocHtml = xfm_toc(page.content || '');
+%><% if (tocHtml) { %>
+<div class="widget widget-toc is-sticky">
+  <div class="widget-head">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-list"></use></svg>
+    <h3><%= __('toc.title') %></h3>
+  </div>
+  <div class="widget-toc-body"><%- tocHtml %></div>
+</div>
+<% } %>

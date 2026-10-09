@@ -1,0 +1,60 @@
+<%
+  const post = locals.post;
+  const index = locals.index || 0;
+  const layoutType = locals.layoutType || 'card';
+  const showCover = locals.showCover !== false;
+  const cover = xfm_cover(post);
+  const useCover = showCover && cover && layoutType !== 'list' && layoutType !== 'classic';
+  const flip = locals.alternate !== false && layoutType === 'card' && index % 2 === 1;
+  const tags = post.tags && post.tags.data ? post.tags.data : [];
+  const cats = post.categories && post.categories.data ? post.categories.data : [];
+%>
+<article class="post-card<%= useCover ? ' has-cover' : '' %><%= flip ? ' is-flip' : '' %><%= post.sticky ? ' is-sticky' : '' %><%= layoutType === 'grid' ? ' card-grid' : '' %>" itemscope itemtype="https://schema.org/BlogPosting">
+  <% if (useCover) { %>
+  <a class="post-cover" href="<%= url_for(post.path) %>" aria-hidden="true" tabindex="-1">
+    <img src="<%= cover %>" alt="<%= post.title %>" loading="lazy" decoding="async">
+    <% if (post.sticky) { %><span class="cover-badge"><%= __('common.sticky') %></span><% } %>
+  </a>
+  <% } %>
+
+  <div class="post-body">
+    <div class="post-meta">
+      <% if (cats.length) { %>
+      <span class="post-cat">
+        <% cats.forEach(function (c, ci) { %>
+        <a href="<%= url_for(c.path) %>"><%= c.name %></a><% if (ci < cats.length - 1) { %><i>,</i><% } %>
+        <% }); %>
+      </span>
+      <% } %>
+      <time datetime="<%= date_xml(post.date) %>"><%= date(post.date, 'MM-DD') %></time>
+      <% if (post.sticky && !useCover) { %><span class="post-badge"><%= __('common.sticky') %></span><% } %>
+    </div>
+
+    <h2 class="post-title" itemprop="name">
+      <a href="<%= url_for(post.path) %>" itemprop="url"><%= post.title %></a>
+    </h2>
+
+    <% if (theme.index && theme.index.excerpt !== 'none') { %>
+    <p class="post-excerpt" itemprop="description"><%= xfm_excerpt(post, (theme.index && theme.index.excerpt_length) || 140) %></p>
+    <% } %>
+
+    <div class="post-footer">
+      <a class="post-more" href="<%= url_for(post.path) %>">
+        <span><%= __('common.read_more') %></span>
+        <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-right"></use></svg>
+      </a>
+      <div class="post-stat">
+        <span title="<%= __('post.wordcount') %>"><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-note"></use></svg><%= xfm_number(xfm_wordcount(post.content)) %></span>
+        <span title="<%= __('post.reading_time') %>"><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-clock"></use></svg><%= xfm_reading(post.content) %> <%= __('post.min_read') %></span>
+      </div>
+    </div>
+
+    <% if (tags.length) { %>
+    <div class="post-tags">
+      <% tags.slice(0, 4).forEach(function (t) { %>
+      <a class="tag-chip" href="<%= url_for(t.path) %>"><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-tag"></use></svg><%= t.name %></a>
+      <% }); %>
+    </div>
+    <% } %>
+  </div>
+</article>

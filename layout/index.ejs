@@ -1,0 +1,59 @@
+<%
+  const layoutType = (theme.index && theme.index.layout) || 'card';
+  const showCover = theme.index && theme.index.cover !== false;
+  const posts = page.posts || site.posts;
+  const all = posts.data.slice();
+  const stickyEnabled = theme.index && theme.index.sticky !== false;
+  const stickyPosts = stickyEnabled ? all.filter(function (p) { return p.sticky; }).sort(function (a, b) { return (b.sticky || 0) - (a.sticky || 0); }) : [];
+  const normalPosts = stickyEnabled ? all.filter(function (p) { return !p.sticky; }) : all;
+  const list = stickyPosts.concat(normalPosts);
+  const alternate = theme.index && theme.index.alternate_layout !== false;
+%>
+<% if (theme.index && theme.index.hero !== false && page.current === 1) { %>
+<section class="hero-panel">
+  <div class="hero-content">
+    <div class="hero-greeting">
+      <span class="hero-avatar"><img src="<%= url_for(theme.avatar || '/images/avatar.svg') %>" alt="<%= config.author || config.title %>"></span>
+      <div class="hero-text">
+        <h1 class="hero-title"><%= theme.hero_title || config.title %></h1>
+        <p class="hero-subtitle"><%= theme.hero_subtitle || theme.tagline || config.subtitle %></p>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <a class="hero-stat" href="<%= url_for('/archives/') %>">
+        <span class="stat-num"><%= site.posts.length %></span>
+        <span class="stat-label"><%= __('footer.total_posts') %></span>
+      </a>
+      <a class="hero-stat" href="<%= url_for('/categories/') %>">
+        <span class="stat-num"><%= site.categories.length %></span>
+        <span class="stat-label"><%= __('common.categories') %></span>
+      </a>
+      <a class="hero-stat" href="<%= url_for('/tags/') %>">
+        <span class="stat-num"><%= site.tags.length %></span>
+        <span class="stat-label"><%= __('common.tags') %></span>
+      </a>
+      <% if (theme.vendors && theme.vendors.busuanzi) { %>
+      <span class="hero-stat">
+        <span class="stat-num" id="busuanzi_value_site_pv">-</span>
+        <span class="stat-label">PV</span>
+      </span>
+      <% } %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<% if (list.length) { %>
+<div class="post-list post-layout-<%= layoutType %><%= stickyPosts.length ? ' has-sticky' : '' %>">
+  <% list.forEach(function (post, i) { %>
+  <%- partial('_partials/post/card', { post: post, index: i, layoutType: layoutType, showCover: showCover, alternate: alternate }) %>
+  <% }); %>
+</div>
+<% } else { %>
+<div class="empty-state">
+  <svg class="xfm-icon empty-icon" aria-hidden="true"><use xlink:href="#xfm-i-note"></use></svg>
+  <p><%= __('search.no_result') %></p>
+</div>
+<% } %>
+
+<%- partial('_partials/pagination') %>

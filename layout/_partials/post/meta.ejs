@@ -1,0 +1,49 @@
+<%
+  const metaList = locals.metaList || ['author', 'date', 'updated', 'categories', 'wordcount', 'reading'];
+  const light = Boolean(locals.light);
+  const cats = page.categories && page.categories.data ? page.categories.data : [];
+%>
+<div class="post-view-meta<%= light ? ' is-light' : '' %>">
+  <% metaList.forEach(function (key) { %>
+    <% if (key === 'author') { %>
+    <span class="meta-item meta-author">
+      <% if (theme.avatar) { %><img class="meta-avatar" src="<%= url_for(theme.avatar) %>" alt="<%= page.author || config.author %>"><% } %>
+      <span><%= page.author || config.author %></span>
+    </span>
+    <% } else if (key === 'date') { %>
+    <span class="meta-item meta-date">
+      <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-calendar"></use></svg>
+      <time datetime="<%= date_xml(page.date) %>" itemprop="datePublished"><%= date(page.date, 'YYYY-MM-DD') %></time>
+    </span>
+    <% } else if (key === 'updated' && page.updated) { %>
+    <span class="meta-item meta-updated">
+      <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-clock"></use></svg>
+      <time datetime="<%= date_xml(page.updated) %>"><%= __('post.updated_date') %> <%= date(page.updated, 'YYYY-MM-DD') %></time>
+    </span>
+    <% } else if (key === 'categories' && cats.length) { %>
+    <span class="meta-item meta-categories">
+      <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-folder"></use></svg>
+      <% cats.forEach(function (c, ci) { %>
+      <a href="<%= url_for(c.path) %>"><%= c.name %></a><% if (ci < cats.length - 1) { %><i>,</i><% } %>
+      <% }); %>
+    </span>
+    <% } else if (key === 'wordcount' && theme.post && theme.post.wordcount !== false) { %>
+    <span class="meta-item meta-wordcount">
+      <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-note"></use></svg>
+      <span><%= xfm_number(xfm_wordcount(page.content)) %> <%= __('post.words_unit') %></span>
+    </span>
+    <% } else if (key === 'reading') { %>
+    <span class="meta-item meta-reading">
+      <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-clock"></use></svg>
+      <span><%= xfm_reading(page.content) %> <%= __('post.min_read') %></span>
+    </span>
+    <% } %>
+  <% }); %>
+
+  <% if (theme.vendors && theme.vendors.busuanzi) { %>
+  <span class="meta-item meta-views">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-eye"></use></svg>
+    <span id="busuanzi_container_page_pv"><span id="busuanzi_value_page_pv">-</span></span>
+  </span>
+  <% } %>
+</div>

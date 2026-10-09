@@ -1,0 +1,14 @@
+<%
+  const expanded = theme.docs && theme.docs.expanded !== false;
+%><div class="site-nav-head">
+  <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-file-doc"></use></svg>
+  <span><%= __('docs.sidebar') %></span>
+</div>
+<% if (theme.search && theme.search.enable !== false) { %>
+<button class="site-nav-search" type="button" data-toggle="search">
+  <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-search"></use></svg>
+  <span><%= __('search.placeholder') %></span>
+  <kbd>Ctrl K</kbd>
+</button>
+<% } %>
+<%- xfm_docs_nav() %>

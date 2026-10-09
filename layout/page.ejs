@@ -1,0 +1,98 @@
+<%
+  const pageType = page.type || '';
+  const isDocs = (page.mode || theme.mode) === 'docs';
+%><% if (pageType === 'tags') { %>
+<%-
+  partial('_partials/taxonomy/tags')
+%>
+<% } else if (pageType === 'categories') { %>
+<%- partial('_partials/taxonomy/categories') %>
+<% } else if (pageType === 'links') { %>
+<%- partial('_partials/taxonomy/links') %>
+<% } else { %>
+
+<article class="page-view<%= isDocs ? ' is-doc' : '' %>">
+  <% if (page.title) { %>
+  <div class="page-view-head">
+    <h1 class="page-view-title"><%= page.title %></h1>
+    <% if (page.description) { %><p class="page-view-desc"><%= page.description %></p><% } %>
+    <% if (page.date) { %>
+    <div class="post-view-meta">
+      <span class="meta-item"><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-calendar"></use></svg><time datetime="<%= date_xml(page.date) %>"><%= date(page.date, 'YYYY-MM-DD') %></time></span>
+    </div>
+    <% } %>
+  </div>
+  <% } %>
+
+  <div class="post-content xfm-content">
+    <%- page.content %>
+  </div>
+
+  <% if (isDocs) { %>
+  <%
+    let pagerPrev = null;
+    let pagerNext = null;
+    const dataKey = (theme.docs && theme.docs.data_file) || 'docs';
+    const tree = site.data && site.data[dataKey] ? site.data[dataKey] : null;
+    if (tree && page.path) {
+      const flat = [];
+      (function walk(items) {
+        (items || []).forEach(function (it) {
+          if (it.path) flat.push({ title: it.title, path: it.path });
+          if (it.children) walk(it.children);
+        });
+      })(tree);
+      const norm = function (p) {
+        let s = String(p || '');
+        if (s.charAt(0) !== '/') s = '/' + s;
+        // page.path 形如 docs/intro/index.html，需与侧栏的 /docs/intro/ 归一
+        s = s.replace(/index\.html$/i, '').replace(/\.html$/i, '/');
+        if (s.length > 1 && s.charAt(s.length - 1) !== '/') s += '/';
+        return s;
+      };
+      const current = norm('' + page.path);
+      const idx = flat.map(function (f) { return norm(f.path); }).indexOf(current);
+      if (idx > -1) {
+        pagerPrev = flat[idx - 1] || null;
+        pagerNext = flat[idx + 1] || null;
+      }
+    }
+    const editBase = theme.docs && theme.docs.edit_base;
+    const showEdit = theme.docs && theme.docs.edit_link && editBase;
+  %>
+  <div class="doc-page-foot">
+    <% if (theme.docs && theme.docs.last_modified !== false && page.updated) { %>
+    <div class="doc-updated">
+      <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-clock"></use></svg>
+      <span><%= __('docs.last_modified') %> <%= date(page.updated, 'YYYY-MM-DD') %></span>
+      <% if (showEdit) { %>
+      <a class="doc-edit" href="<%= editBase + page.source %>" target="_blank" rel="noopener noreferrer">
+        <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-external"></use></svg><%= __('docs.edit_this_page') %>
+      </a>
+      <% } %>
+    </div>
+    <% } %>
+
+    <% if (theme.docs && theme.docs.page_nav !== false && (pagerPrev || pagerNext)) { %>
+    <nav class="post-nav doc-nav">
+      <% if (pagerPrev) { %>
+      <a class="post-nav-item is-prev" href="<%= url_for(pagerPrev.path) %>">
+        <span class="nav-label"><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-left"></use></svg><%= __('docs.prev_page') %></span>
+        <span class="nav-title"><%= pagerPrev.title %></span>
+      </a>
+      <% } else { %><span class="post-nav-item is-empty"></span><% } %>
+      <% if (pagerNext) { %>
+      <a class="post-nav-item is-next" href="<%= url_for(pagerNext.path) %>">
+        <span class="nav-label"><%= __('docs.next_page') %><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-right"></use></svg></span>
+        <span class="nav-title"><%= pagerNext.title %></span>
+      </a>
+      <% } else { %><span class="post-nav-item is-empty"></span><% } %>
+    </nav>
+    <% } %>
+  </div>
+  <% } %>
+
+  <% if (page.comments !== false) { %><%- partial('_partials/comment') %><% } %>
+</article>
+
+<% } %>

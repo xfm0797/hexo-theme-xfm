@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="<%= config.language || 'zh-CN' %>" data-mode="<%= page.mode || theme.mode || 'blog' %>">
+<head><%- partial('_partials/head') %></head>
+<%
+  const currentMode = page.mode || theme.mode || 'blog';
+  const sidebarPos = (theme.sidebar && theme.sidebar.position) || 'right';
+  const hasSidebar = currentMode === 'blog' && sidebarPos !== 'none' && page.sidebar !== false;
+  const isContentPage = Boolean(is_post() || is_page());
+  const tocEnabled = isContentPage && page.toc !== false && theme.post && theme.post.toc !== false;
+  const rightToc = tocEnabled && currentMode !== 'blog' && (currentMode === 'docs' ? theme.docs.toc !== false : theme.notes.toc !== false);
+  const bodyClass = [
+    'mode-' + currentMode,
+    hasSidebar ? 'has-sidebar sidebar-' + sidebarPos : 'no-sidebar',
+    rightToc ? 'has-inline-toc' : '',
+    theme.appearance && theme.appearance.animation === false ? 'no-animation' : ''
+  ].filter(Boolean).join(' ');
+%>
+<body class="<%= bodyClass %>">
+  <%- partial('_partials/sprite') %>
+
+  <% if (theme.reading && theme.reading.progress_bar !== false) { %>
+  <div class="reading-progress" aria-hidden="true"><i></i></div>
+  <% } %>
+
+  <%- partial('_partials/header') %>
+
+  <div class="site-body">
+    <% if (currentMode === 'docs') { %>
+    <aside class="site-nav docs-nav" id="docsNav">
+      <div class="site-nav-inner">
+        <%- partial('_partials/docs/nav') %>
+      </div>
+    </aside>
+    <% } %>
+
+    <% if (currentMode === 'notes') { %>
+    <aside class="site-nav notes-nav" id="notesNav">
+      <div class="site-nav-inner">
+        <%- partial('_partials/notes/nav') %>
+      </div>
+    </aside>
+    <% } %>
+
+    <main class="content-column" id="contentColumn">
+      <div class="content-wrap">
+        <% if (isContentPage && theme.post && theme.post.breadcrumb !== false) { %>
+        <%- partial('_partials/breadcrumb') %>
+        <% } %>
+        <%- body %>
+      </div>
+    </main>
+
+    <% if (rightToc) { %>
+    <aside class="toc-column" id="tocColumn">
+      <div class="toc-column-inner">
+        <div class="toc-header"><%= __('toc.title') %></div>
+        <%- xfm_toc(page.content || '') %>
+      </div>
+    </aside>
+    <% } %>
+
+    <% if (hasSidebar) { %>
+    <aside class="widget-column" id="widgetColumn">
+      <%- partial('_partials/sidebar') %>
+    </aside>
+    <% } %>
+  </div>
+
+  <%- partial('_partials/footer') %>
+  <%- partial('_partials/search') %>
+
+  <% if (theme.reading && theme.reading.back_to_top !== false) { %>
+  <button class="floating-btn back-to-top" type="button" data-back-to-top aria-label="<%= __('common.back_to_top') %>">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-up"></use></svg>
+  </button>
+  <% } %>
+
+  <div class="xfm-toast" id="xfmToast" role="status" aria-live="polite"></div>
+  <div class="lightbox" id="lightbox" tabindex="-1" aria-label="image preview">
+    <img class="lightbox-img" alt="preview">
+    <span class="lightbox-close"><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-close"></use></svg></span>
+    <span class="lightbox-caption"></span>
+  </div>
+
+  <%- partial('_partials/scripts') %>
+</body>
+</html>

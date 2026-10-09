@@ -1,0 +1,21 @@
+<%
+  const prev = page.prev;
+  const next = page.next;
+%><nav class="post-nav">
+  <% if (prev) { %>
+  <a class="post-nav-item is-prev" href="<%= url_for(prev.path) %>">
+    <span class="nav-label"><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-left"></use></svg><%= __('post.nav_prev') %></span>
+    <span class="nav-title"><%= prev.title %></span>
+  </a>
+  <% } else { %>
+  <span class="post-nav-item is-empty"><span class="nav-label"><%= __('post.nav_prev') %></span><span class="nav-title"><%= __('post.nav_none') %></span></span>
+  <% } %>
+  <% if (next) { %>
+  <a class="post-nav-item is-next" href="<%= url_for(next.path) %>">
+    <span class="nav-label"><%= __('post.nav_next') %><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-right"></use></svg></span>
+    <span class="nav-title"><%= next.title %></span>
+  </a>
+  <% } else { %>
+  <span class="post-nav-item is-empty"><span class="nav-label"><%= __('post.nav_next') %></span><span class="nav-title"><%= __('post.nav_none') %></span></span>
+  <% } %>
+</nav>

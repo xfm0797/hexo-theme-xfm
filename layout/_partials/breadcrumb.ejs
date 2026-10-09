@@ -1,0 +1,17 @@
+<nav class="breadcrumb" aria-label="breadcrumb">
+  <ol class="breadcrumb-list">
+    <li><a href="<%= url_for(config.root || '/') %>"><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-home"></use></svg><span><%= __('common.home') %></span></a></li>
+    <% if (is_post() && page.categories && page.categories.data && page.categories.data.length) { %>
+    <li>
+      <a href="<%= url_for(page.categories.data[0].path) %>"><%= page.categories.data[0].name %></a>
+    </li>
+    <% } else if (is_category()) { %>
+    <li><a href="<%= url_for('/categories/') %>"><%= __('common.categories') %></a></li>
+    <% } else if (is_tag()) { %>
+    <li><a href="<%= url_for('/tags/') %>"><%= __('common.tags') %></a></li>
+    <% } else if (is_archive()) { %>
+    <li><span><%= __('common.archives') %></span></li>
+    <% } %>
+    <li class="is-current"><span><%= page.title %></span></li>
+  </ol>
+</nav>

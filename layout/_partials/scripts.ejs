@@ -1,0 +1,111 @@
+<script>
+  window.XFM = {
+    root: '<%= config.root || '/' %>',
+    mode: '<%= (theme.mode || 'blog') %>',
+    lang: '<%= config.language || 'zh-CN' %>',
+    scheme: '<%= (theme.appearance && theme.appearance.scheme) || 'auto' %>',
+    search: {
+      enable: <%= theme.search && theme.search.enable !== false ? 'true' : 'false' %>,
+      path: '<%= url_for((theme.search && theme.search.path) || 'search.json') %>',
+      max: <%= (theme.search && theme.search.max_results) || 20 %>,
+      preview: <%= (theme.search && theme.search.preview_length) || 100 %>,
+      showDate: <%= theme.search && theme.search.show_date !== false ? 'true' : 'false' %>
+    },
+    reading: {
+      progress: <%= theme.reading && theme.reading.progress_bar !== false ? 'true' : 'false' %>,
+      smooth: <%= theme.reading && theme.reading.smooth_scroll !== false ? 'true' : 'false' %>,
+      autoHideNav: <%= theme.navbar && theme.navbar.auto_hide !== false ? 'true' : 'false' %>,
+      stickyNav: <%= theme.navbar && theme.navbar.sticky !== false ? 'true' : 'false' %>,
+      animation: <%= theme.appearance && theme.appearance.animation !== false ? 'true' : 'false' %>
+    },
+    features: {
+      lightbox: <%= theme.vendors && theme.vendors.lightbox !== false ? 'true' : 'false' %>,
+      copyCode: <%= theme.code_block && theme.code_block.copy !== false ? 'true' : 'false' %>,
+      foldCode: <%= Number((theme.code_block && theme.code_block.max_height) || -1) > 0 ? 'true' : 'false' %>,
+      toc: <%= theme.post && theme.post.toc !== false ? 'true' : 'false' %>
+    },
+    i18n: {
+      copy: '<%= __('common.copy') %>',
+      copied: '<%= __('common.copied') %>',
+      copyFailed: '<%= __('common.copy_failed') %>',
+      linkCopied: '<%= __('common.link_copied') %>',
+      searching: '<%= __('search.searching') %>',
+      noResult: '<%= __('search.no_result') %>',
+      noInput: '<%= __('search.no_input') %>',
+      resultCount: '<%= __('search.result_count') %>',
+      searchError: '<%= __('search.error') %>',
+      inTitle: '<%= __('search.in_title') %>',
+      inContent: '<%= __('search.in_content') %>',
+      inTag: '<%= __('search.in_tag') %>',
+      docsNav: '<%= __('docs.sidebar') %>',
+      notesNav: '<%= __('notes.sidebar') %>'
+    }
+  };
+</script>
+
+<script src="<%- url_for('/js/core.js') %>"></script>
+<script src="<%- url_for('/js/toc.js') %>"></script>
+<% if (theme.search && theme.search.enable !== false) { %>
+<script src="<%- url_for('/js/search.js') %>"></script>
+<% } %>
+
+<% if (theme.vendors && theme.vendors.math === 'katex' && theme.vendors.math_auto_render !== false) { %>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@<%= theme.vendors.katex_version || '0.16.9' %>/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@<%= theme.vendors.katex_version || '0.16.9' %>/dist/contrib/auto-render.min.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    if (!window.renderMathInElement) return;
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\\\[', right: '\\\\]', display: true },
+        { left: '\\\\(', right: '\\\\)', display: false }
+      ],
+      throwOnError: false
+    });
+  });
+</script>
+<% } %>
+
+<% if (theme.vendors && theme.vendors.math === 'mathjax' && theme.vendors.math_auto_render !== false) { %>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@<%= theme.vendors.mathjax_version || '3.2.2' %>/es5/tex-mml-chtml.js"></script>
+<% } %>
+
+<% if (theme.vendors && theme.vendors.mermaid) { %>
+<script type="module">
+  const themeNow = () => (document.documentElement.getAttribute('data-scheme') === 'dark' ? 'dark' : 'default');
+  const loadMermaid = async () => {
+    if (window.__xfmMermaid) return window.__xfmMermaid;
+    const mod = await import('https://cdn.jsdelivr.net/npm/mermaid@<%= theme.vendors.mermaid_version || '10.9.1' %>/dist/mermaid.esm.min.mjs');
+    const mermaid = mod.default;
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'loose', theme: themeNow() });
+    await mermaid.run({ querySelector: '.mermaid' });
+    window.__xfmMermaid = mermaid;
+    return mermaid;
+  };
+  window.__xfmLoadMermaid = loadMermaid;
+  window.addEventListener('DOMContentLoaded', () => loadMermaid());
+  document.addEventListener('xfm:schemechange', () => {
+    if (window.__xfmMermaid) window.__xfmMermaid.initialize({ startOnLoad: false, securityLevel: 'loose', theme: themeNow() });
+  });
+</script>
+<% } %>
+
+<% if (theme.vendors && theme.vendors.busuanzi) { %>
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<% } %>
+
+<% if (theme.vendors && theme.vendors.analytics) { %><%- theme.vendors.analytics %><% } %>
+
+<% if (theme.custom && theme.custom.js) { theme.custom.js.forEach(function (item) { %>
+<script src="<%- url_for('/js/' + item) %>"></script>
+<% }); } %>
+
+<% if (theme.custom && theme.custom.body_end) { %><%- theme.custom.body_end %><% } %>

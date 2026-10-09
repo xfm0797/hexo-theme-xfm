@@ -1,0 +1,49 @@
+<%
+  const posts = (page.posts && page.posts.data) || [];
+  const yearly = theme.taxonomy && theme.taxonomy.archive_yearly !== false;
+  const groupStyle = theme.taxonomy && theme.taxonomy.timeline_style !== false;
+  const groups = {};
+  posts
+    .slice()
+    .sort(function (a, b) { return new Date(b.date) - new Date(a.date); })
+    .forEach(function (p) {
+      const year = date(p.date, 'YYYY');
+      const key = yearly ? year : date(p.date, 'YYYY-MM');
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(p);
+    });
+  const keys = Object.keys(groups);
+%>
+<div class="page-head">
+  <h1 class="page-title"><%= __('archive.title') %></h1>
+  <p class="page-subtitle"><%= __('archive.total_posts').replace('%s', posts.length) %></p>
+</div>
+
+<% if (groupStyle) { %>
+<div class="archive-timeline">
+  <% keys.forEach(function (key) { %>
+  <div class="archive-group">
+    <div class="archive-year"><span><%= key %></span><i><%= groups[key].length %></i></div>
+    <ul class="archive-list">
+      <% groups[key].forEach(function (p) { %>
+      <li class="archive-item">
+        <time class="archive-date"><%= date(p.date, 'MM-DD') %></time>
+        <a class="archive-title" href="<%= url_for(p.path) %>"><%= p.title %></a>
+        <% if (p.categories && p.categories.data && p.categories.data.length) { %>
+        <span class="archive-cat"><%= p.categories.data[0].name %></span>
+        <% } %>
+      </li>
+      <% }); %>
+    </ul>
+  </div>
+  <% }); %>
+</div>
+<% } else { %>
+<div class="post-list post-layout-list">
+  <% posts.forEach(function (p, i) { %>
+  <%- partial('_partials/post/card', { post: p, index: i, layoutType: 'list', showCover: false, alternate: false }) %>
+  <% }); %>
+</div>
+<% } %>
+
+<%- partial('_partials/pagination') %>

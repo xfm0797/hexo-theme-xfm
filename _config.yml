@@ -1,0 +1,558 @@
+# ------------------------------------------------------------------------------
+# XFM Theme - Configuration
+# 高端大气 · 三模式（Blog / Notes / Docs）· 全站配置化
+# 文档: https://github.com/xfm0797/hexo-theme-xfm
+# 注: 主题配置的优先级高于站点 _config.yml 中的同名键。
+# ------------------------------------------------------------------------------
+
+# ==============================================================================
+# 站点模式
+# ==============================================================================
+# blog  : 传统博客。首页卡片流 + 侧边栏挂件，重内容展示
+# notes : 笔记 / 知识库。左侧笔记树 + 沉浸式窄栏阅读
+# docs  : 文档站。左侧文档树 + 正文 + 右侧目录的三栏布局
+mode: blog
+
+# ==============================================================================
+# 品牌与资源
+# ==============================================================================
+# 站点 Logo（留空则显示站点标题）
+logo:
+# 站点标题旁的副标题 / 标语
+tagline: ""
+# 博主头像（侧边栏 & 移动端抽屉使用）
+avatar: /images/avatar.svg
+# 站点 favicon
+favicon: /images/favicon.svg
+# 无封面文章使用的默认头图，留空则使用渐变色
+default_cover:
+# 默认占位图（懒加载 & 灯箱兜底）
+placeholder: /images/default-cover.svg
+
+# ==============================================================================
+# 外观
+# ==============================================================================
+appearance:
+  # 色彩方案: light / dark / auto（跟随系统）
+  scheme: auto
+  # 主题主色（十六进制），作用于链接、按钮、进度条、选中态
+  primary: "#4f6bed"
+  # 圆角档位: sharp / normal / round
+  radius: normal
+  # 是否启用磨砂玻璃导航栏
+  glass_navbar: true
+  # 是否启用元素入场动画
+  animation: true
+  # 自定义背景图（浅色 / 深色），留空则使用纯色渐变
+  background_light:
+  background_dark:
+  # 自定义字体 CDN 链接（留空使用系统字体栈）
+  font_family: ""
+  # 是否在导航栏显示站点标题
+  site_title: true
+
+# ==============================================================================
+# 导航栏
+# ==============================================================================
+navbar:
+  # 是否显示
+  enable: true
+  # 是否固定在顶部（滚动时不消失）
+  sticky: true
+  # 导航栏高度（px）
+  height: 64
+  # 是否在滚动时自动隐藏导航栏
+  auto_hide: true
+
+# ==============================================================================
+# 导航菜单
+# ==============================================================================
+# 支持两级：一级为菜单项，二级通过 children 定义下拉子菜单
+# 字段: path(路径) icon(图标名) children(子菜单) external(是否外链)
+# 图标名参考 source/js/icons.js 中定义的名称，留空则不显示图标
+menu:
+  首页:
+    path: /
+    icon: home
+  归档:
+    path: /archives/
+    icon: archive
+  分类:
+    path: /categories/
+    icon: folder
+  标签:
+    path: /tags/
+    icon: tag
+  更多:
+    icon: compass
+    children:
+      友链:
+        path: /links/
+        icon: link
+      关于:
+        path: /about/
+        icon: user
+
+# ==============================================================================
+# 首页（Blog 模式）
+# ==============================================================================
+index:
+  # 文章列表形态: card(卡片) / list(紧凑列表) / grid(网格) / classic(传统)
+  layout: card
+  # 是否显示头部的欢迎语 + 站点数据大卡
+  hero: true
+  # 是否显示置顶文章（front-matter 中设置 sticky: 100）
+  sticky: true
+  # 摘要来源: excerpt(<!-- more --> 以上) / auto(自动截取) / none(不显示)
+  excerpt: excerpt
+  # 自动截取摘要的长度
+  excerpt_length: 140
+  # 是否显示封面图
+  cover: true
+  # 每页文章数量（覆盖站点 per_page）
+  per_page:
+  # 是否在图片卡片上交替显示左右布局
+  alternate_layout: true
+
+# ==============================================================================
+# 文章页
+# ==============================================================================
+post:
+  # 是否显示目录
+  toc: true
+  # 目录包含的标题层级范围
+  toc_depth: [2, 3, 4]
+  # 目录是否换行显示长标题
+  toc_wrap: true
+  # 是否显示面包屑
+  breadcrumb: true
+  # meta 区显示项（顺序即显示顺序）
+  meta:
+    - author
+    - date
+    - updated
+    - categories
+    - wordcount
+    - reading
+  # 是否精显示更新时间
+  show_updated: true
+  # 是否显示字数统计
+  wordcount: true
+  # 每分钟阅读字数（用于估算阅读时长）
+  words_per_minute: 350
+  # 是否显示上一篇 / 下一篇
+  post_nav: true
+  # 是否显示版权声明卡片
+  copyright: true
+  # 版权提示文案（支持 {link} 占位符）
+  copyright_text: 本文为原创内容，转载请注明出处：{link}
+  # 是否显示标签
+  tags: true
+  # 是否显示分享按钮组
+  share: true
+  # 是否显示「打赏」区域
+  reward: false
+  # 打赏文案
+  reward_text: 如果这篇文章对你有帮助，可以请我喝杯咖啡。
+  # 打赏付款码图片
+  reward_wechat:
+  reward_alipay:
+  # 是否推荐相关文章
+  related_posts: true
+  # 相关文章数量
+  related_count: 4
+
+# ==============================================================================
+# 侧边栏（Blog 模式）
+# ==============================================================================
+sidebar:
+  # 位置: left / right / none
+  position: right
+  # 是否在大屏 sticky
+  sticky: true
+  # 挂件列表（按数组顺序渲染）
+  widgets:
+    - profile
+    - recent_posts
+    - categories
+    - tagcloud
+    - archive_list
+  # 各挂件参数
+  profile:
+    # 是否显示社交图标
+    social: true
+  recent_posts:
+    count: 5
+  categories:
+    count: 10
+    # 是否显示文章数量
+    show_count: true
+  tagcloud:
+    count: 30
+    # 云标签按文章数着色
+    colorful: true
+  archive_list:
+    count: 12
+    # 折叠方式: monthly / yearly
+    type: monthly
+
+# ==============================================================================
+# 笔记模式（mode: notes）
+# ==============================================================================
+notes:
+  # 侧边栏分组依据: category / date / none
+  group_by: category
+  # 每组内的排序: title / date / order
+  sort_by: date
+  # 排序方向: asc / desc
+  order: desc
+  # 是否默认折叠分组
+  collapsed: false
+  # 侧边栏是否显示搜索框
+  search: true
+  # 是否显示每篇笔记的日期
+  show_date: true
+  # 正文最大宽度（px）
+  content_width: 820
+  # 是否显示右侧内置目录（不占用 generate 的 toc）
+  toc: true
+
+# ==============================================================================
+# 文档模式（mode: docs）
+# ==============================================================================
+docs:
+  # 侧边栏数据来源：在博客 source/_data/docs.yml 中定义的树形结构
+  # 结构示例（递归）：
+  #   - title: 入门指南
+  #     children:
+  #       - title: 安装
+  #         path: /docs/install/
+  # 若 _data/docs.yml 不存在，则自动按页面 order + title 生成侧边栏
+  data_file: docs
+  # 是否默认展开全部节点
+  expanded: true
+  # 当前页面所在分支是否自动展开
+  auto_expand: true
+  # 是否显示上下篇导航
+  page_nav: true
+  # 正文底部是否显示「最后更新时间」
+  last_modified: true
+  # 正文底部是否显示贡献 / 编辑链接
+  edit_link: false
+  # 编辑链接前缀，最终地址 = edit_base + page.source
+  edit_base:
+  # 右侧目录是否显示
+  toc: true
+
+# ==============================================================================
+# 页脚
+# ==============================================================================
+footer:
+  # 是否显示
+  enable: true
+  # 建站年份（用于 © 2020-2026 格式），留空自动取当前年份
+  since:
+  # 是否显示站点运行时长
+  runtime: false
+  # 运行时长起始日期，格式 YYYY-MM-DD
+  runtime_start:
+  # 是否显示文章 / 字数统计
+  statistics: true
+  # 自定义页脚内容（HTML 可用），显示在版权行上方
+  custom: ""
+  # 是否显示备案号
+  icp:
+  # 是否显示公安备案
+  police:
+  police_code:
+
+# ==============================================================================
+# 代码块
+# ==============================================================================
+code_block:
+  # 是否显示行号（需站点 _config.yml 中 highlight.line_number: true）
+  line_number: true
+  # 是否显示语言标签
+  language: true
+  # 是否显示复制按钮
+  copy: true
+  # 超过多少行自动折叠（-1 表示不折叠）
+  max_height: -1
+  # 超过行数折叠时是否默认展开
+  fold_default: false
+  # 是否使用 Mac 风格窗口三色点
+  mac_style: true
+
+# ==============================================================================
+# 搜索
+# ==============================================================================
+search:
+  # 是否启用（生成 /search.json 索引文件）
+  enable: true
+  # 索引文件路径
+  path: search.json
+  # 是否索引文章正文
+  index_content: true
+  # 正文索引的最大长度（字符）
+  content_length: 3000
+  # 每条结果显示的最大正文预览长度
+  preview_length: 100
+  # 单次最多返回结果数
+  max_results: 20
+  # 是否显示搜索快捷键提示
+  hotkey: true
+  # 是否显示搜索结果中的日期
+  show_date: true
+
+# ==============================================================================
+# 评论系统
+# ==============================================================================
+# 支持: giscus / utterances / waline / twikoo / disqus / disqusjs / changyan / valine
+comments:
+  enable: false
+  type: giscus
+  # 是否懒加载（滚动到评论区再注入，推荐开启）
+  lazyload: true
+  # 自定义评论区的标题
+  title: 评论
+  # 是否在计数回调中预留空间，避免跳动
+  preserve_height: false
+
+  # --- Giscus (基于 GitHub Discussions) ---
+  giscus:
+    repo: user/repo
+    repo_id:
+    category: Announcements
+    category_id:
+    mapping: pathname
+    strict: 0
+    reactions_enabled: 1
+    emit_metadata: 0
+    input_position: bottom
+    theme: preferred_color_scheme
+    lang: zh-CN
+    loading: lazy
+
+  # --- Utterances (基于 GitHub Issues) ---
+  utterances:
+    repo: user/repo
+    issue_term: pathname
+    label: comment
+    theme: github-light
+    # 支持主题跟随: preferred-color-scheme
+    dark_theme: github-dark
+
+  # --- Waline (需自建服务端) ---
+  waline:
+    server_url:
+    emoji:
+      - https://cdn.jsdelivr.net/gh/walinejs/emojis/weibo
+    lang: zh-CN
+    visitor: true
+    required_meta: [nick, mail]
+    avatar: mp
+    page_size: 10
+
+  # --- Twikoo (需云函数部署) ---
+  twikoo:
+    env_id:
+    region:
+    lang: zh-CN
+    visitor: true
+
+  # --- Disqus ---
+  disqus:
+    shortname:
+    apikey:
+    lang: zh_CN
+
+  # --- DisqusJS (反代 Disqus) ---
+  disqusjs:
+    shortname:
+    apikey:
+    api: https://disqus.skk.moe/disqus/
+
+  # --- 畅言 ---
+  changyan:
+    appid:
+    conf:
+
+  # --- Valine (LeanCloud) ---
+  valine:
+    appid:
+    appkey:
+    placeholder: 说点什么吧…
+    avatar: mp
+    visitor: true
+    lang: zh-CN
+
+# ==============================================================================
+# 第三方增强
+# ==============================================================================
+vendors:
+  # KaTeX 数学公式 / MathJax
+  math: katex        # katex / mathjax / none
+  # 数学 CDN 版本
+  katex_version: "0.16.9"
+  mathjax_version: "3.2.2"
+  # 是否自动注入数学渲染器（关闭则需自行在页面注入）
+  math_auto_render: true
+
+  # Mermaid 流程图
+  mermaid: true
+  mermaid_version: "10.9.1"
+  mermaid_theme: default      # default / forest / dark / neutral
+
+  # 图片灯箱
+  lightbox: true
+  # 图片懒加载
+  lazyload: true
+  # 是否给所有代码块启用单行高亮
+  line_highlight: true
+
+  # 站点访问统计 busuanzi
+  busuanzi: false
+  # 站长统计（自定义 HTML/JS 片段，注入 footer）
+  analytics: ""
+
+  # RSS 链接（留空则自动 /atom.xml）
+  rss:
+  # 是否在导航栏显示 RSS 图标
+  rss_navbar: true
+
+  # 是否启用 PWA  meta（需自行提供 manifest）
+  pwa: false
+  manifest: /manifest.json
+
+  # 是否给外链自动添加 target="_blank"
+  external_link: true
+  # 是否启用 Markdown 内容净化（标题锚点、表格包裹、任务列表）
+  content_enhance: true
+
+# ==============================================================================
+# SEO
+# ==============================================================================
+seo:
+  # 是否在 <head> 输出 Open Graph / Twitter Card meta
+  og_meta: true
+  # 默认分享图（封面图缺失时的兜底）
+  og_image:
+  # JSON-LD 结构化数据
+  json_ld: true
+  # canonical 链接
+  canonical: true
+  # meta 关键词兜底（文章取 tags）
+  keywords: ""
+  # 是否输出百度站点验证所需的 meta（需自行配置 key）
+  baidu_verify:
+  google_verify:
+
+# ==============================================================================
+# 分享
+# ==============================================================================
+share:
+  # 可选: weibo / qq / twitter / facebook / telegram / whatsapp / copy / qrcode
+  services:
+    - copy
+    - weibo
+    - qq
+    - twitter
+  # 是否显示二维码分享
+  qrcode: true
+
+# ==============================================================================
+# 社交账号与友链
+# ==============================================================================
+# 支持项: github / twitter / weibo / zhihu / bilibili / email / rss / qq /
+#         telegram / juejin / zhihu / steem / facebook / instagram / youtube /
+#         linkedin / mastodon / custom
+social:
+  github: https://github.com/xfm0797
+  email: mailto:hi@example.com
+  rss: /atom.xml
+
+# 友链（渲染在 page layout: links 页面，或直接内嵌使用）
+links:
+  - name: XFM 主题源码
+    url: https://github.com/xfm0797/hexo-theme-xfm
+    avatar: /images/avatar.svg
+    desc: 高端大气的 Hexo 三模式主题
+
+# ==============================================================================
+# 阅读体验
+# ==============================================================================
+reading:
+  # 顶部阅读进度条
+  progress_bar: true
+  # 阅读时长提示（顶部渐显）
+  reading_time: true
+  # 返回顶部按钮
+  back_to_top: true
+  # 图片是否支持点击放大（依赖 lightbox）
+  zoom_image: true
+  # 深色 / 浅色切换是否显示浮动按钮
+  scheme_toggle: true
+  # 是否显示「文章过时提醒」（超过 N 天提示）
+  outdated_notice: false
+  outdated_days: 365
+  # 平滑滚动
+  smooth_scroll: true
+
+# ==============================================================================
+# 标签页 / 分类页 / 归档页
+# ==============================================================================
+# tags / categories / archives 页面需要在 source 下新建同名 md:
+#   hexo new page tags   ->  front-matter 加 type: tags
+#   hexo new page categories -> type: categories
+#   hexo new page archives   -> 无需 type
+taxonomy:
+  # 标签页是否显示云标签
+  tag_cloud: true
+  # 分类页是否显示分类云
+  category_cloud: true
+  # 归档页是否开启分组
+  archive_group: true
+  # 归档是否按年分桶
+  archive_yearly: true
+  # 是否显示时间轴样式
+  timeline_style: true
+  # 归档列表形态: timeline / list / grid
+  layout: timeline
+
+# ==============================================================================
+# 404 页面
+# ==============================================================================
+error_404:
+  enable: true
+  # 自动注入主题内置的 404 页（若站点已有 404 页则忽略）
+  auto_generate: true
+  # 标题与文案
+  title: 页面走失了
+  subtitle: 你访问的页面不存在，或许它已被移动或删除。
+  # 显示的推荐文章数量
+  recommend_count: 4
+
+# ==============================================================================
+# 站点地图与机器人
+# ==============================================================================
+# 内置生成 /sitemap.xml 与 /robots.txt
+sitemap:
+  enable: true
+  robots: false
+  # sitemap 中排除的路径
+  exclude: []
+
+# ==============================================================================
+# 自定义注入（高级）
+# ==============================================================================
+custom:
+  # 注入 <head> 的自定义 HTML
+  head: ""
+  # 注入 </body> 前的自定义 HTML
+  body_end: ""
+  # 自定义 CSS 文件列表（相对 /css/ 目录）
+  css: []
+  # 自定义 JS 文件列表（相对 /js/ 目录）
+  js: []
+  # 是否在每篇文章底部注入自定义 HTML
+  post_footer: ""

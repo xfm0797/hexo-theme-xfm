@@ -1,0 +1,32 @@
+<%
+  const cats = (site.categories.data || []).sort(function (a, b) { return b.length - a.length || a.name.localeCompare(b.name); });
+  const cloud = theme.taxonomy && theme.taxonomy.category_cloud !== false;
+%>
+<div class="page-head">
+  <h1 class="page-title"><%= __('taxonomy.categories_title') %></h1>
+  <p class="page-subtitle"><%= __('taxonomy.categories_total').replace('%s', cats.length) %></p>
+</div>
+
+<% if (cloud && cats.length) { %>
+<div class="category-cloud">
+  <% cats.forEach(function (c, i) { %>
+  <a class="category-item" href="<%= url_for(c.path) %>" style="--cat-index:<%= i %>">
+    <span class="category-name"><%= c.name %></span>
+    <span class="category-count"><%= c.length %></span>
+  </a>
+  <% }); %>
+</div>
+<% } %>
+
+<div class="post-list post-layout-card">
+  <% cats.forEach(function (c, i) { %>
+  <div class="category-block">
+    <h2 class="category-title"><a href="<%= url_for(c.path) %>"><%= c.name %></a><i>(<%= c.length %>)</i></h2>
+    <ul class="category-posts">
+      <% c.posts.data.slice(0, 6).forEach(function (p) { %>
+      <li><a href="<%= url_for(p.path) %>"><time><%= date(p.date, 'MM-DD') %></time><span><%= p.title %></span></a></li>
+      <% }); %>
+    </ul>
+  </div>
+  <% }); %>
+</div>

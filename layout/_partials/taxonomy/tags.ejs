@@ -1,0 +1,33 @@
+<%
+  const tags = (site.tags.data || []).sort(function (a, b) { return b.length - a.length || a.name.localeCompare(b.name); });
+  const cloud = theme.taxonomy && theme.taxonomy.tag_cloud !== false;
+  const maxCount = tags.length ? Math.max.apply(null, tags.map(function (t) { return t.length; })) : 1;
+%>
+<div class="page-head">
+  <h1 class="page-title"><%= __('taxonomy.tags_title') %></h1>
+  <p class="page-subtitle"><%= __('taxonomy.tags_total').replace('%s', tags.length) %></p>
+</div>
+
+<% if (cloud) { %>
+<div class="tagcloud full">
+  <% tags.forEach(function (t) {
+       const weight = Math.max(0.8, Math.min(2.2, 0.8 + (t.length / maxCount) * 1.2));
+  %>
+  <a class="tagcloud-item" href="<%= url_for(t.path) %>" style="--tag-weight:<%= weight.toFixed(2) %>">
+    <span class="tag-name">#<%= t.name %></span>
+    <span class="tag-count"><%= t.length %></span>
+  </a>
+  <% }); %>
+</div>
+<% } %>
+
+<div class="archive-timeline">
+  <ul class="archive-list">
+    <% tags.forEach(function (t) { %>
+    <li class="archive-item">
+      <a class="archive-title" href="<%= url_for(t.path) %>">#<%= t.name %></a>
+      <span class="archive-cat"><%= t.length %> <%= __('taxonomy.pages_in') %></span>
+    </li>
+    <% }); %>
+  </ul>
+</div>

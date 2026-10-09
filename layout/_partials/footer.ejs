@@ -1,0 +1,61 @@
+<%
+  const now = date(Date.now(), 'YYYY');
+  const sinceVal = theme.footer && theme.footer.since ? theme.footer.since : now;
+  const yearText = String(sinceVal) === String(now) ? now : sinceVal + ' - ' + now;
+  const totalPosts = site.posts.length;
+  const totalWords = xfm_total_words();
+%>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <% if (theme.footer && theme.footer.custom) { %>
+    <div class="footer-custom"><%- theme.footer.custom %></div>
+    <% } %>
+
+    <div class="footer-main">
+      <div class="footer-copyright">
+        <span>&copy; <%= yearText %> <strong><%= config.author || config.title %></strong></span>
+        <% if (theme.footer && theme.footer.runtime && theme.footer.runtime_start) { %>
+        <span class="footer-runtime" data-runtime="<%= theme.footer.runtime_start %>">
+          · <span class="runtime-text"></span>
+        </span>
+        <% } %>
+      </div>
+
+      <% if (theme.footer && theme.footer.statistics !== false) { %>
+      <div class="footer-stats">
+        <span><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-note"></use></svg><%- __('footer.total_posts') %> <%= totalPosts %></span>
+        <span><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-fire"></use></svg><%- __('footer.total_words') %> <%= xfm_number(totalWords) %></span>
+        <% if (theme.vendors && theme.vendors.busuanzi) { %>
+        <span><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-eye"></use></svg><span id="busuanzi_container_site_uv"><span id="busuanzi_value_site_uv">-</span></span></span>
+        <% } %>
+      </div>
+      <% } %>
+
+      <%- partial('_partials/social', { extraClass: 'footer-social' }) %>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-meta">
+        <span><%- __('footer.powered_by') %> <a href="https://hexo.io/" target="_blank" rel="noopener noreferrer">Hexo</a></span>
+        <span>·</span>
+        <span><%- __('footer.theme_by') %> <a href="https://github.com/xfm0797/hexo-theme-xfm" target="_blank" rel="noopener noreferrer">XFM</a></span>
+        <% if (theme.sitemap && theme.sitemap.enable !== false) { %>
+        <span>·</span>
+        <a href="<%= url_for('/sitemap.xml') %>"><%- __('common.sitemap') %></a>
+        <% } %>
+        <span>·</span>
+        <a href="<%= url_for((theme.vendors && theme.vendors.rss) || '/atom.xml') %>"><%- __('common.rss') %></a>
+      </div>
+      <% if (theme.footer && theme.footer.icp) { %>
+      <div class="footer-record">
+        <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer"><%= theme.footer.icp %></a>
+        <% if (theme.footer.police) { %>
+        <a href="https://beian.mps.gov.cn/" target="_blank" rel="noopener noreferrer">
+          <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-globe"></use></svg><%= theme.footer.police %>
+        </a>
+        <% } %>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</footer>

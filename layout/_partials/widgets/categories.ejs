@@ -1,0 +1,26 @@
+<%
+  const conf = theme.sidebar.categories || {};
+  const count = conf.count || 10;
+  const showCount = conf.show_count !== false;
+  const list = (site.categories.data || [])
+    .slice()
+    .sort(function (a, b) { return b.length - a.length || a.name.localeCompare(b.name); })
+    .slice(0, count);
+%>
+<div class="widget widget-categories">
+  <div class="widget-head">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-folder"></use></svg>
+    <h3><%= __('common.categories') %></h3>
+  </div>
+  <ul class="widget-list count-list">
+    <% list.forEach(function (c) { %>
+    <li>
+      <a href="<%= url_for(c.path) %>">
+        <span class="item-name"><%= c.name %></span>
+        <% if (showCount) { %><span class="item-count"><%= c.length %></span><% } %>
+      </a>
+    </li>
+    <% }); %>
+    <% if (!list.length) { %><li class="widget-empty"><%= __('notes.empty_group') %></li><% } %>
+  </ul>
+</div>

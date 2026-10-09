@@ -1,0 +1,18 @@
+<%
+  const licenseText = (theme.post && theme.post.copyright_text) || __('post.copyright');
+  const pageUrl = decodeURI(full_url_for(page.path || ''));
+%><div class="post-copyright">
+  <div class="copyright-author">
+    <% if (theme.avatar) { %><img src="<%= url_for(theme.avatar) %>" alt="<%= page.author || config.author %>"><% } %>
+    <div>
+      <strong><%= page.author || config.author %></strong>
+      <span><%= date(page.date, 'YYYY-MM-DD') %></span>
+    </div>
+  </div>
+  <p class="copyright-text">
+    <%= licenseText.replace('{link}', '<a href="' + pageUrl + '">' + (page.title || config.title) + '</a>') %>
+  </p>
+  <div class="copyright-meta">
+    <span><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-link"></use></svg><a href="<%= pageUrl %>"><%= pageUrl %></a></span>
+  </div>
+</div>

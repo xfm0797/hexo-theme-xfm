@@ -1,0 +1,141 @@
+<%
+  const menu = theme.menu || {};
+  const navEnable = !(theme.navbar && theme.navbar.enable === false);
+  const showTitle = !(theme.appearance && theme.appearance.site_title === false);
+%>
+<% if (navEnable) { %>
+<header class="site-header<%= (theme.appearance && theme.appearance.glass_navbar) ? ' is-glass' : '' %>" id="siteHeader">
+  <div class="header-inner">
+    <button class="icon-btn nav-toggle" type="button" data-toggle="drawer" aria-label="<%= __('common.menu') %>">
+      <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-menu"></use></svg>
+    </button>
+
+    <a class="brand" href="<%= url_for(config.root || '/') %>">
+      <% if (theme.logo) { %>
+      <img class="brand-logo" src="<%= url_for(theme.logo) %>" alt="<%= config.title %>">
+      <% } else { %>
+      <span class="brand-mark">X</span>
+      <% } %>
+      <% if (showTitle) { %>
+      <span class="brand-text">
+        <span class="brand-title"><%= config.title %></span>
+        <% if (theme.tagline) { %><span class="brand-tagline"><%= theme.tagline %></span><% } %>
+      </span>
+      <% } %>
+    </a>
+
+    <nav class="nav-menu" id="navMenu">
+      <ul class="nav-list">
+        <% Object.keys(menu).forEach(function (key) {
+             const item = menu[key] || {};
+             const hasChildren = item.children && Object.keys(item.children).length;
+        %>
+        <li class="nav-item<%= hasChildren ? ' has-children' : '' %>">
+          <% if (item.path) { %>
+          <a class="nav-link <%= xfm_active(item.path) %>" href="<%= url_for(item.path) %>"<%= item.external ? ' target="_blank" rel="noopener noreferrer"' : '' %>>
+            <% if (item.icon) { %>
+            <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-<%= item.icon %>"></use></svg>
+            <% } %>
+            <span><%= key %></span>
+          </a>
+          <% } else { %>
+          <span class="nav-link nav-text">
+            <% if (item.icon) { %>
+            <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-<%= item.icon %>"></use></svg>
+            <% } %>
+            <span><%= key %></span>
+            <svg class="xfm-icon nav-arrow" aria-hidden="true"><use xlink:href="#xfm-i-chevron-down"></use></svg>
+          </span>
+          <% } %>
+          <% if (hasChildren) { %>
+          <ul class="nav-submenu">
+            <% Object.keys(item.children).forEach(function (subKey) {
+                 const sub = item.children[subKey] || {};
+            %>
+            <li>
+              <a class="nav-sub-link <%= xfm_active(sub.path) %>" href="<%= url_for(sub.path) %>"<%= sub.external ? ' target="_blank" rel="noopener noreferrer"' : '' %>>
+                <% if (sub.icon) { %>
+                <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-<%= sub.icon %>"></use></svg>
+                <% } %>
+                <span><%= subKey %></span>
+              </a>
+            </li>
+            <% }); %>
+          </ul>
+          <% } %>
+        </li>
+        <% }); %>
+
+        <% if (theme.mode === 'notes') { %>
+        <li class="nav-item">
+          <a class="nav-link" href="<%= url_for('/archives/') %>">
+            <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-archive"></use></svg><span><%= __('common.archives') %></span>
+          </a>
+        </li>
+        <% } %>
+      </ul>
+    </nav>
+
+    <div class="nav-tools">
+      <% if (theme.search && theme.search.enable !== false) { %>
+      <button class="icon-btn search-trigger" type="button" data-toggle="search" aria-label="<%= __('common.search') %>">
+        <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-search"></use></svg>
+        <% if (theme.search.hotkey !== false) { %>
+        <kbd class="kbd-hint" data-kbd-hint>Ctrl K</kbd>
+        <% } %>
+      </button>
+      <% } %>
+
+      <% if (theme.vendors && theme.vendors.rss_navbar !== false) { %>
+      <a class="icon-btn" href="<%= url_for((theme.vendors && theme.vendors.rss) || '/atom.xml') %>" aria-label="<%= __('common.rss') %>" title="<%= __('common.rss') %>">
+        <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-rss"></use></svg>
+      </a>
+      <% } %>
+
+      <% if (theme.reading && theme.reading.scheme_toggle !== false) { %>
+      <button class="icon-btn scheme-toggle" type="button" data-toggle="scheme" aria-label="theme">
+        <svg class="xfm-icon scheme-icon-light" aria-hidden="true"><use xlink:href="#xfm-i-sun"></use></svg>
+        <svg class="xfm-icon scheme-icon-dark" aria-hidden="true"><use xlink:href="#xfm-i-moon"></use></svg>
+        <svg class="xfm-icon scheme-icon-auto" aria-hidden="true"><use xlink:href="#xfm-i-auto"></use></svg>
+      </button>
+      <% } %>
+    </div>
+  </div>
+</header>
+
+<div class="drawer-mask" data-toggle="drawer"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="drawer-brand">
+      <% if (theme.avatar) { %><img class="drawer-avatar" src="<%= url_for(theme.avatar) %>" alt="<%= config.author || config.title %>"><% } %>
+      <div>
+        <div class="drawer-title"><%= config.author || config.title %></div>
+        <% if (theme.tagline) { %><div class="drawer-subtitle"><%= theme.tagline %></div><% } %>
+      </div>
+    </div>
+    <button class="icon-btn" type="button" data-toggle="drawer" aria-label="<%= __('common.close') %>">
+      <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-close"></use></svg>
+    </button>
+  </div>
+  <nav class="drawer-nav">
+    <% Object.keys(menu).forEach(function (key) {
+         const item = menu[key] || {};
+    %>
+    <% if (item.path) { %>
+    <a class="drawer-link <%= xfm_active(item.path) %>" href="<%= url_for(item.path) %>">
+      <% if (item.icon) { %><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-<%= item.icon %>"></use></svg><% } %>
+      <span><%= key %></span>
+    </a>
+    <% } %>
+    <% if (item.children) { Object.keys(item.children).forEach(function (subKey) {
+         const sub = item.children[subKey] || {}; %>
+    <a class="drawer-link drawer-sub <%= xfm_active(sub.path) %>" href="<%= url_for(sub.path) %>">
+      <% if (sub.icon) { %><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-<%= sub.icon %>"></use></svg><% } %>
+      <span><%= subKey %></span>
+    </a>
+    <% }); } %>
+    <% }); %>
+  </nav>
+  <%- partial('_partials/social', { extraClass: 'drawer-social' }) %>
+</aside>
+<% } %>

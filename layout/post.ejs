@@ -1,0 +1,60 @@
+<%
+  const metaList = (theme.post && theme.post.meta) || ['author', 'date', 'updated', 'categories', 'wordcount', 'reading'];
+  const coverUrl = xfm_cover(page);
+  const showCoverHero = Boolean(coverUrl) && page.cover_style !== 'inline';
+  const tags = page.tags && page.tags.data ? page.tags.data : [];
+  const outdatedDays = Number((theme.reading && theme.reading.outdated_days) || 365);
+  const diffDays = Math.floor((Date.now() - new Date(page.updated || page.date).getTime()) / 86400000);
+  const showOutdated = theme.reading && theme.reading.outdated_notice && diffDays > outdatedDays;
+%>
+<article class="post-view<%= showCoverHero ? ' has-hero-cover' : '' %>" itemscope itemtype="https://schema.org/BlogPosting">
+
+  <% if (showCoverHero) { %>
+  <div class="post-cover-hero">
+    <img src="<%= coverUrl %>" alt="<%= page.title %>">
+    <div class="cover-hero-mask"></div>
+    <div class="cover-hero-inner">
+      <h1 class="post-view-title" itemprop="name"><%= page.title %></h1>
+      <%- partial('_partials/post/meta', { metaList: metaList, light: true }) %>
+    </div>
+  </div>
+  <% } %>
+
+  <div class="post-view-inner">
+    <% if (!showCoverHero) { %>
+    <h1 class="post-view-title" itemprop="name"><%= page.title %></h1>
+    <%- partial('_partials/post/meta', { metaList: metaList, light: false }) %>
+    <% } %>
+
+    <% if (showOutdated) { %>
+    <div class="xfm-note note-warning outdated-notice">
+      <div class="note-inner">
+        <span class="note-icon"><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-warning"></use></svg></span>
+        <div class="note-main"><div class="note-body"><%= __('post.outdated').replace('%s', diffDays) %></div></div>
+      </div>
+    </div>
+    <% } %>
+
+    <div class="post-content xfm-content" itemprop="articleBody">
+      <%- page.content %>
+    </div>
+
+    <% if (tags.length && theme.post && theme.post.tags !== false) { %>
+    <div class="post-tags-block">
+      <span class="tags-label"><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-tag"></use></svg><%= __('post.tags_label') %></span>
+      <% tags.forEach(function (t) { %>
+      <a class="tag-chip" href="<%= url_for(t.path) %>">#<%= t.name %></a>
+      <% }); %>
+    </div>
+    <% } %>
+
+    <% if (theme.post && theme.post.share !== false) { %><%- partial('_partials/post/share') %><% } %>
+    <% if (theme.custom && theme.custom.post_footer) { %><div class="post-custom-footer"><%- theme.custom.post_footer %></div><% } %>
+    <% if (theme.post && theme.post.copyright !== false) { %><%- partial('_partials/post/copyright') %><% } %>
+    <% if (theme.post && theme.post.reward) { %><%- partial('_partials/post/reward') %><% } %>
+    <% if (theme.post && theme.post.post_nav !== false) { %><%- partial('_partials/post/nav-posts') %><% } %>
+    <% if (theme.post && theme.post.related_posts !== false) { %><%- partial('_partials/post/related') %><% } %>
+
+    <%- partial('_partials/comment') %>
+  </div>
+</article>

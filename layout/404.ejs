@@ -1,0 +1,45 @@
+<%
+  const recommend = (page.recommend || (site.posts.data || []).slice(0, 4));
+%>
+<div class="error-404">
+  <div class="error-code">404</div>
+  <h1 class="error-title"><%= page.title || __('error.404_title') %></h1>
+  <p class="error-desc"><%= page.subtitle || __('error.404_subtitle') %></p>
+  <div class="error-actions">
+    <a class="xfm-btn btn-fill" href="<%= url_for(config.root || '/') %>">
+      <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-home"></use></svg>
+      <span><%= __('error.go_home') %></span>
+    </a>
+    <% if (theme.search && theme.search.enable !== false) { %>
+    <button class="xfm-btn btn-outline" type="button" data-toggle="search">
+      <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-search"></use></svg>
+      <span><%= __('common.search') %></span>
+    </button>
+    <% } %>
+  </div>
+
+  <% if (recommend && recommend.length) { %>
+  <div class="error-recommend">
+    <div class="section-head">
+      <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-star"></use></svg>
+      <h3><%= __('error.recommend') %></h3>
+    </div>
+    <div class="related-grid">
+      <% recommend.slice(0, Number(theme.error_404.recommend_count) || 4).forEach(function (p) {
+           const cover = xfm_cover(p);
+      %>
+      <a class="related-card" href="<%= url_for(p.path) %>">
+        <span class="related-cover">
+          <% if (cover) { %><img src="<%= cover %>" alt="<%= p.title %>" loading="lazy"><% } else { %>
+          <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-note"></use></svg><% } %>
+        </span>
+        <span class="related-info">
+          <span class="related-title"><%= p.title %></span>
+          <span class="related-date"><%= date(p.date, 'MM-DD') %></span>
+        </span>
+      </a>
+      <% }); %>
+    </div>
+  </div>
+  <% } %>
+</div>

@@ -1,0 +1,33 @@
+{
+  "name": "hexo-theme-xfm",
+  "version": "1.0.0",
+  "title": "XFM",
+  "description": "高端大气的 Hexo 主题，内置博客 / 笔记 / 文档三种模式，零第三方依赖，全站配置化。",
+  "keywords": [
+    "hexo",
+    "hexo-theme",
+    "theme",
+    "blog",
+    "notes",
+    "docs",
+    "documentation",
+    "responsive",
+    "dark-mode",
+    "xfm"
+  ],
+  "homepage": "https://github.com/xfm0797/hexo-theme-xfm",
+  "bugs": "https://github.com/xfm0797/hexo-theme-xfm/issues",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "languages",
+    "layout",
+    "scripts",
+    "source",
+    "_config.yml",
+    "LICENSE",
+    "README.md"
+  ]
+}

@@ -1,0 +1,23 @@
+<%
+  const count = (theme.sidebar.recent_posts && theme.sidebar.recent_posts.count) || 5;
+  const list = (site.posts.data || [])
+    .filter(function (p) { return p.title; })
+    .sort(function (a, b) { return new Date(b.date) - new Date(a.date); })
+    .slice(0, count);
+%>
+<div class="widget widget-recent">
+  <div class="widget-head">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-note"></use></svg>
+    <h3><%= __('widgets.recent_posts') %></h3>
+  </div>
+  <ul class="widget-list">
+    <% list.forEach(function (p) { %>
+    <li>
+      <a href="<%= url_for(p.path) %>">
+        <span class="recent-title"><%= p.title %></span>
+        <time class="recent-date"><%= date(p.date, 'MM-DD') %></time>
+      </a>
+    </li>
+    <% }); %>
+  </ul>
+</div>

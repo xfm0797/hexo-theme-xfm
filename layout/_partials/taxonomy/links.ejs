@@ -1,0 +1,32 @@
+<%
+  const links = theme.links || [];
+%>
+<div class="page-head">
+  <h1 class="page-title"><%= page.title || __('common.links') %></h1>
+  <% if (page.description) { %><p class="page-subtitle"><%= page.description %></p><% } %>
+</div>
+
+<div class="post-content xfm-content">
+  <%- page.content %>
+</div>
+
+<% if (links.length) { %>
+<div class="links-grid">
+  <% links.forEach(function (item) { %>
+  <a class="xfm-link-card" href="<%= item.url %>" target="_blank" rel="noopener noreferrer nofollow">
+    <span class="link-avatar">
+      <% if (item.avatar) { %>
+      <img src="<%= url_for(item.avatar) %>" alt="<%= item.name %>" loading="lazy">
+      <% } else { %>
+      <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-link"></use></svg>
+      <% } %>
+    </span>
+    <span class="link-main">
+      <span class="link-title"><%= item.name %></span>
+      <span class="link-desc"><%= item.desc || '' %></span>
+    </span>
+    <svg class="xfm-icon link-arrow" aria-hidden="true"><use xlink:href="#xfm-i-arrow-right"></use></svg>
+  </a>
+  <% }); %>
+</div>
+<% } %>

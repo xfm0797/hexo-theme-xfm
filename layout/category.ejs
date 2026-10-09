@@ -1,0 +1,20 @@
+<%
+  const posts = (page.posts && page.posts.data) || [];
+  const termName = page.category || (page.page && page.page.category) || page.title;
+%>
+<div class="page-head">
+  <h1 class="page-title"><%= __('common.categories') %> · <%= termName %></h1>
+  <p class="page-subtitle"><%= posts.length %> <%= __('taxonomy.pages_in') %></p>
+</div>
+
+<% if (posts.length) { %>
+<div class="post-list post-layout-list">
+  <% posts.forEach(function (p, i) { %>
+  <%- partial('_partials/post/card', { post: p, index: i, layoutType: 'list', showCover: false, alternate: false }) %>
+  <% }); %>
+</div>
+<% } else { %>
+<div class="empty-state"><%= __('notes.empty_group') %></div>
+<% } %>
+
+<%- partial('_partials/pagination') %>

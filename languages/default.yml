@@ -1,0 +1,131 @@
+# XFM Theme - 默认语言包（简体中文）
+# 站点 language: zh-CN / zh_CN 时自动命中，未匹配 key 会回退本文件
+
+common:
+  home: 首页
+  menu: 菜单
+  more: 更多
+  categories: 分类
+  tags: 标签
+  archives: 归档
+  links: 友链
+  about: 关于
+  search: 搜索
+  sitemap: 站点地图
+  rss: 订阅
+  back_to_top: 返回顶部
+  view_all: 查看全部
+  load_more: 加载更多
+  no_more: 没有更多了
+  read_more: 阅读全文
+  collapse: 折叠
+  expand: 展开
+  copy: 复制
+  copied: 已复制
+  copy_failed: 复制失败
+  copied_success: 内容已复制到剪贴板
+  link_copied: 链接已复制到剪贴板
+  sticky: 置顶
+  featured: 精选
+
+search:
+  placeholder: 搜索文章、笔记与文档…
+  hint_prefix: 按
+  hint_suffix: 打开搜索框
+  searching: 正在检索…
+  no_input: 输入关键词开始搜索
+  result_count: 找到 %s 条结果
+  no_result: 没有匹配的内容，换个关键词试试
+  tips_up_down: 上下键选择
+  tips_enter: 回车打开
+  tips_esc: Esc 关闭
+  in_title: 标题
+  in_content: 正文
+  in_tag: 标签
+  error: 搜索索引加载失败，请先执行 hexo g 生成索引
+  index_empty: 搜索索引为空
+
+toc:
+  title: 目录
+  empty: 本文暂无目录
+  toggle: 展开 / 收起目录
+  on_this_page: 本页目录
+
+post:
+  author: 作者
+  published_date: 发布于
+  updated_date: 更新于
+  wordcount: 字数
+  words_unit: 字
+  reading_time: 阅读时长
+  min_read: 分钟
+  nav_prev: 上一篇
+  nav_next: 下一篇
+  nav_none: 没有了
+  copyright: 版权声明
+  tags_label: 标签
+  categories_label: 分类
+  share_label: 分享本文
+  reward: 打赏
+  related: 推荐阅读
+  outdated: 本文最后更新于 %s 天前，部分内容可能已过时。
+  table_of_contents: 文章目录
+
+comments:
+  title: 评论
+  loading: 评论加载中…
+  switch_theme: 切换评论主题
+  enable_js: 评论功能需要启用 JavaScript
+  none: 暂无评论
+
+footer:
+  site_runtime: 本站已运行
+  runtime_days: 天
+  statistics: 共 %s 篇文章 · 累计 %s 字
+  total_posts: 文章数
+  total_words: 总字数
+  all_rights_reserved: 版权所有
+  powered_by: 由 Hexo 驱动
+  theme_by: 主题
+
+docs:
+  sidebar: 文档目录
+  prev_page: 上一章
+  next_page: 下一章
+  last_modified: 最后更新于
+  edit_this_page: 在 GitHub 上编辑此页
+  no_docs: 暂无文档目录，请在 source/_data/docs.yml 中配置
+
+notes:
+  sidebar: 笔记目录
+  total_notes: 共 %s 篇笔记
+  empty_group: 暂无笔记
+
+archive:
+  title: 归档
+  total_posts: 共 %s 篇文章
+  timeline_year: 年
+  timeline_month: 月
+
+taxonomy:
+  tags_title: 标签云
+  tags_total: 共 %s 个标签
+  categories_title: 分类
+  categories_total: 共 %s 个分类
+  pages_in: 篇文章
+
+error:
+  404_title: 页面走失了
+  404_subtitle: 你访问的页面不存在，或许它已被移动或删除。
+  go_home: 返回首页
+  recommend: 也许你会感兴趣
+
+widgets:
+  recent_posts: 最新文章
+
+misc:
+  table_wrap_hint: 左右滑动查看完整表格
+  image_alt: 图片
+  code_expand: 展开代码
+  code_fold: 折叠代码
+  qrcodeshare: 扫码分享

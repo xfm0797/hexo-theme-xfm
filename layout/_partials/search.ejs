@@ -1,0 +1,22 @@
+<% if (theme.search && theme.search.enable !== false) { %>
+<div class="search-modal" id="searchModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="<%= __('common.search') %>">
+  <div class="search-mask" data-toggle="search"></div>
+  <div class="search-panel" role="document">
+    <div class="search-input-wrap">
+      <svg class="xfm-icon search-icon" aria-hidden="true"><use xlink:href="#xfm-i-search"></use></svg>
+      <input class="search-input" id="searchInput" type="search" placeholder="<%= __('search.placeholder') %>" autocomplete="off" spellcheck="false">
+      <button class="search-clear" type="button" id="searchClear" aria-label="<%= __('common.close') %>">
+        <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-close"></use></svg>
+      </button>
+    </div>
+    <div class="search-results" id="searchResults">
+      <div class="search-tip"><%= __('search.no_input') %></div>
+    </div>
+    <div class="search-footer">
+      <span><kbd>↑</kbd><kbd>↓</kbd> <%= __('search.tips_up_down') %></span>
+      <span><kbd>Enter</kbd> <%= __('search.tips_enter') %></span>
+      <span><kbd>Esc</kbd> <%= __('search.tips_esc') %></span>
+    </div>
+  </div>
+</div>
+<% } %>

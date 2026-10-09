@@ -1,0 +1,15 @@
+<%
+  const social = theme.social || {};
+  const socialClass = (typeof extraClass !== 'undefined' && extraClass) || '';
+  const keys = Object.keys(social).filter(function (k) { return social[k]; });
+%><% if (keys.length) { %>
+<div class="social-links <%= socialClass %>">
+  <% keys.forEach(function (name) {
+       const url = social[name];
+       const target = /^https?:\/\//i.test(String(url)) ? ' target="_blank" rel="noopener noreferrer"' : '';
+  %>
+  <a class="social-item social-<%= name %>" href="<%= url %>"<%= target %> aria-label="<%= name %>" title="<%= name %>">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-<%= name %>"></use></svg>
+  </a>
+  <% }); %>
+</div><% } %>

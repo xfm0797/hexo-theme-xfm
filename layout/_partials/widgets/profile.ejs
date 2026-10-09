@@ -1,0 +1,20 @@
+<% const social = theme.social || {}; %>
+<div class="widget widget-profile">
+  <div class="profile-card">
+    <div class="profile-avatar">
+      <img src="<%= url_for(theme.avatar || '/images/avatar.svg') %>" alt="<%= config.author || config.title %>" loading="lazy">
+    </div>
+    <div class="profile-name"><%= config.author || config.title %></div>
+    <% if (theme.tagline || config.description) { %>
+    <div class="profile-desc"><%= theme.tagline || config.description %></div>
+    <% } %>
+    <div class="profile-stats">
+      <a href="<%= url_for('/archives/') %>"><strong><%= site.posts.length %></strong><span><%= __('footer.total_posts') %></span></a>
+      <a href="<%= url_for('/categories/') %>"><strong><%= site.categories.length %></strong><span><%= __('common.categories') %></span></a>
+      <a href="<%= url_for('/tags/') %>"><strong><%= site.tags.length %></strong><span><%= __('common.tags') %></span></a>
+    </div>
+    <% if (theme.sidebar.profile.social !== false && Object.keys(social).length) { %>
+    <%- partial('_partials/social', { extraClass: 'profile-social' }) %>
+    <% } %>
+  </div>
+</div>

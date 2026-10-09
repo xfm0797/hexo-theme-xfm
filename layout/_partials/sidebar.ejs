@@ -1,0 +1,21 @@
+<%
+  const widgets = (theme.sidebar && theme.sidebar.widgets) || [];
+%><div class="sidebar-inner">
+  <% widgets.forEach(function (name) { %>
+    <% if (name === 'toc') { %>
+      <% if (is_post() || is_page()) { %>
+      <%- partial('_partials/widgets/toc') %>
+      <% } %>
+    <% } else if (name === 'profile') { %>
+      <%- partial('_partials/widgets/profile') %>
+    <% } else if (name === 'recent_posts') { %>
+      <%- partial('_partials/widgets/recent-posts') %>
+    <% } else if (name === 'categories') { %>
+      <%- partial('_partials/widgets/categories') %>
+    <% } else if (name === 'tagcloud' || name === 'tags') { %>
+      <%- partial('_partials/widgets/tagcloud') %>
+    <% } else if (name === 'archive_list') { %>
+      <%- partial('_partials/widgets/archive-list') %>
+    <% } %>
+  <% }); %>
+</div>

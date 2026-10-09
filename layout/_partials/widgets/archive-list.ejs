@@ -1,0 +1,34 @@
+<%
+  const conf = theme.sidebar.archive_list || {};
+  const count = conf.count || 12;
+  const type = conf.type || 'monthly';
+  const posts = (site.posts.data || []).filter(function (p) { return p.date; });
+  const groups = {};
+  posts
+    .slice()
+    .sort(function (a, b) { return new Date(b.date) - new Date(a.date); })
+    .forEach(function (p) {
+      const key = type === 'yearly'
+        ? date(p.date, 'YYYY')
+        : date(p.date, 'YYYY') + '-' + date(p.date, 'MM');
+      groups[key] = (groups[key] || 0) + 1;
+    });
+  const keys = Object.keys(groups).slice(0, count);
+%>
+<div class="widget widget-archive-list">
+  <div class="widget-head">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-archive"></use></svg>
+    <h3><%= __('common.archives') %></h3>
+  </div>
+  <ul class="widget-list count-list">
+    <% keys.forEach(function (key) { %>
+    <li>
+      <a href="<%= url_for('/archives/' + key.replace('-', '/') + '/') %>">
+        <span class="item-name"><%= key %></span>
+        <span class="item-count"><%= groups[key] %></span>
+      </a>
+    </li>
+    <% }); %>
+    <% if (!keys.length) { %><li class="widget-empty"><%= __('notes.empty_group') %></li><% } %>
+  </ul>
+</div>
