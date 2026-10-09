@@ -6,6 +6,31 @@ XFM 是一套面向长期写作的 Hexo 主题：全套设计令牌驱动、深�
 
 ---
 
+## 预览
+
+<table>
+  <tr>
+    <td width="33%" align="center"><img src="preview/blog.png" alt="blog 模式"><br><b>blog</b><br>卡片流 + 侧边挂件</td>
+    <td width="33%" align="center"><img src="preview/notes.png" alt="notes 模式"><br><b>notes</b><br>笔记树 + 沉浸阅读</td>
+    <td width="33%" align="center"><img src="preview/docs.png" alt="docs 模式"><br><b>docs</b><br>文档树 + 正文 + 目录</td>
+  </tr>
+</table>
+
+窄屏下三种模式自动转为单栏，笔记 / 文档的左侧栏收起为抽屉，目录折叠为面板 —— 详见[四、响应式](#四响应式)。
+
+<table>
+  <tr>
+    <td width="30%" align="center"><img src="preview/mobile.png" alt="blog 移动端"></td>
+    <td width="30%" align="center"><img src="preview/mobile-docs.png" alt="docs 移动端"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>blog · 单栏卡片流</sub></td>
+    <td align="center"><sub>docs · 抽屉侧栏 + 折叠目录 + 悬浮入口</sub></td>
+  </tr>
+</table>
+
+---
+
 ## 一、特性总览
 
 | 维度 | 能力 |
@@ -22,7 +47,7 @@ XFM 是一套面向长期写作的 Hexo 主题：全套设计令牌驱动、深�
 | SEO | OG / Twitter Card、canonical、JSON-LD、内置 sitemap.xml 与 robots.txt、404 页 |
 | 阅读体验 | 阅读进度条、返回顶部、平滑滚动、滚动入场动画、文章过时提醒、版权卡、打赏、分享、相关文章 |
 | 国际化 | 内置 zh-CN / en，i18n 文案抽离到 `languages/` |
-| 交付质量 | 响应式三档断点、打印样式、动效降级（`prefers-reduced-motion`）、语义化标签 |
+| 交付质量 | 响应式六档断点（可配置）、触摸与刘海屏适配、打印样式、动效降级（`prefers-reduced-motion`）、语义化标签 |
 
 ---
 
@@ -91,7 +116,62 @@ mode: blog    # blog / notes / docs
 
 ---
 
-## 四、核心配置速查
+## 四、响应式
+
+断点、侧栏行为、触摸尺寸全部集中在 `responsive` 一节。改配置即可，**不要改模板或 CSS**。
+
+```yaml
+responsive:
+  enable: true               # 关闭则始终保持桌面布局
+
+  breakpoints:               # 六档断点，任意调整
+    xxl: 1600                # 超宽屏：放宽容器与侧栏
+    xl: 1280                 # 小桌面：收紧间距
+    lg: 1080                 # 平板横屏：主导航折叠为抽屉
+    md: 900                  # 平板竖屏：侧边挂件落到正文下方
+    sm: 768                  # 手机：单栏布局
+    xs: 480                  # 窄屏：进一步压缩留白
+
+  container_width:           # 整站容器最大宽度，留空用 1280
+  content_width:             # 正文最大宽度，留空用 780
+
+  mobile_sidebar: offcanvas  # offcanvas 抽屉 / inline 内联折叠 / hide 隐藏
+  mobile_toc: widget         # widget 正文顶部折叠面板 / hide 隐藏
+
+  fluid_typography: true     # 标题与正文字号随视口平滑缩放（clamp）
+  fluid_min_width: 360       # 缩放下限参考宽度
+  fluid_max_width: 1440      # 缩放上限参考宽度
+
+  touch_target: 44           # 触摸设备最小可点击边长（px）
+  safe_area: true            # 适配刘海屏 / 手势条安全区
+  compact_height: true       # 矮屏（手机横屏）压缩纵向留白
+  user_zoom: true            # 是否允许双指缩放
+```
+
+### 各档位做了什么
+
+| 断点 | 行为 |
+| --- | --- |
+| ≥ xxl | 容器放宽到 1440，三栏间距加大 |
+| ≤ xl | 侧栏宽度与栏间距收紧 |
+| ≤ lg | 顶部菜单折叠为汉堡抽屉；笔记 / 文档侧栏脱离固定定位 |
+| ≤ md | blog 侧边挂件落到正文下方；双列封面卡片转纵向 |
+| ≤ sm | 全局单栏；笔记 / 文档侧栏按 `mobile_sidebar` 处理；目录按 `mobile_toc` 处理 |
+| ≤ xs | 进一步压缩按钮与留白，隐藏非必要文案 |
+| 矮屏 | 高度 ≤ 480 时压缩纵向留白、缩小导航高度 |
+| 触摸设备 | 交互元素补齐到 `touch_target` 指定的最小边长 |
+| 无悬停设备 | 关闭依赖 hover 的浮层，避免移动端点击卡住 |
+
+### 实现方式
+
+宽度断点由 `layout/_partials/responsive-style.ejs` 在渲染时**按配置生成** `<style>`，写进 `<head>`；
+`source/css/responsive.css` 只保留与断点无关的部分（打印样式、`prefers-reduced-motion` 降级），避免两处规则互相打架。
+
+窄屏下侧栏抽屉的视口判定阈值也取自配置 —— 通过 `<html data-bp-sm>` 传给前端脚本，JS 不写死断点。
+
+---
+
+## 五、核心配置速查
 
 主题全部配置集中在 `themes/xfm/_config.yml`，站点可用 `theme_config` 覆盖同名键。常用项：
 
@@ -153,7 +233,7 @@ hexo new page archives     # 无需额外 type
 
 ---
 
-## 五、标签插件
+## 六、标签插件
 
 所有标签插件在 Markdown 正文中直接使用：
 
@@ -201,7 +281,7 @@ graph LR
 
 ---
 
-## 六、Front-matter 支持字段
+## 七、Front-matter 支持字段
 
 ```yaml
 ---
@@ -226,7 +306,7 @@ order: 1                      # 笔记/文档模式排序权重
 
 ---
 
-## 七、目录结构
+## 八、目录结构
 
 ```
 themes/xfm
@@ -237,6 +317,8 @@ themes/xfm
 │   ├── index / post / page / archive / category / tag / 404
 │   └── _partials/           # head / header / footer / sidebar / toc /
 │                            # search / comment / widgets / notes / docs…
+│                            # responsive-style.ejs 按配置生成断点样式
+├── preview/                 # README 用的模式预览图
 ├── scripts/
 │   ├── filters/content.js   # 代码块工具条、标题锚点、表格容器、外链、懒加载
 │   ├── generators/          # search.json、sitemap.xml、robots.txt、404
@@ -250,7 +332,7 @@ themes/xfm
 
 ---
 
-## 八、自定义
+## 九、自定义
 
 **覆盖样式**：在站点 `source/_data/styles.styl` 之外，推荐直接把自定义 CSS/JS 放进主题后，通过配置注入：
 
@@ -269,12 +351,12 @@ custom:
 
 ---
 
-## 九、浏览器支持
+## 十、浏览器支持
 
 Chrome / Edge / Firefox / Safari 最近两个大版本。使用了 CSS 变量、`backdrop-filter`、`aspect-ratio`、`IntersectionObserver`；旧浏览器会优雅降级（失去磨砂与动画，不影响阅读）。
 
 ---
 
-## 十、许可
+## 十一、许可
 
 MIT License。
