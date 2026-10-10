@@ -21,3 +21,7 @@ npm-debug.log*
 
 # 本地覆盖配置（不应提交）
 _config.local.yml
+
+# npm 凭据 / 打包产物（不应提交）
+.npmrc
+*.tgz

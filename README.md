@@ -54,10 +54,14 @@ XFM 是一套面向长期写作的 Hexo 主题：全套设计令牌驱动、深�
 ## 二、安装
 
 ```bash
+# npm（推荐，便于版本升级）
+npm i hexo-theme-xfm
+
+# 或 git clone（跟随仓库最新提交）
 git clone https://github.com/xfm0797/hexo-theme-xfm.git themes/xfm
 ```
 
-站点 `_config.yml`：
+安装后把主题放到站点的 `themes/xfm` 目录（npm 安装的从 `node_modules/hexo-theme-xfm` 复制或软链），站点 `_config.yml`：
 
 ```yaml
 theme: xfm

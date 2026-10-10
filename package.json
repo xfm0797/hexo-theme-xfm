@@ -16,8 +16,15 @@
     "dark-mode",
     "xfm"
   ],
-  "homepage": "https://github.com/xfm0797/hexo-theme-xfm",
-  "bugs": "https://github.com/xfm0797/hexo-theme-xfm/issues",
+  "homepage": "https://github.com/xfm0797/hexo-theme-xfm#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xfm0797/hexo-theme-xfm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xfm0797/hexo-theme-xfm/issues"
+  },
+  "author": "xfm0797",
   "license": "MIT",
   "engines": {
     "node": ">=16.0.0"
@@ -29,6 +36,7 @@
     "source",
     "_config.yml",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "preview"
   ]
 }
