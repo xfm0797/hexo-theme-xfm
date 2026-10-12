@@ -118,6 +118,31 @@ mode: blog    # blog / notes / docs
 
 未定义该文件时，会自动按页面的 `order` + `title` 生成侧边栏。
 
+目录树的默认展开范围由两个开关决定，收起 / 展开是**纯 CSS**（无 JS 时保持默认展开，不会先闪开再收起）：
+
+```yaml
+docs:
+  expanded: true      # true 全部展开；false 只展开当前页所在分支
+  auto_expand: true   # 是否自动展开当前页所在分支
+```
+
+带子节点的条目本身就是折叠开关：点箭头、或点分组文本都能展开 / 收起；按钮带 `aria-expanded`，可 Tab 聚焦后用回车 / 空格操作。
+
+### 笔记模式侧边栏
+
+```yaml
+notes:
+  note_categories: []   # 只收录这些分类的文章，留空 = 不过滤
+  note_tags: []         # 只收录带这些标签的文章，留空 = 不过滤；与上一项同时配置时取交集
+  group_by: category    # category / date / none（none = 平铺列表，不出现分组头）
+  sort_by: date         # title / date / order
+  order: desc           # asc / desc
+  collapsed: false      # 分组默认是否折叠（当前页所在分组始终展开）
+  show_date: true
+```
+
+> 想让某篇文章在左侧导航里常驻（点进正文后导航不消失），在它的 front-matter 写 `mode: notes`。
+
 ---
 
 ## 四、自适应式响应
@@ -262,7 +287,16 @@ post:
 
 sidebar:
   position: right     # left / right / none
+  sticky: true        # 挂件总高超过一屏时建议设 false，否则底部挂件要滚到底才看得到
   widgets: [profile, recent_posts, categories, tagcloud, archive_list]
+
+menu_order: [首页, 归档, 分类, 标签, 文档, 笔记, 更多]
+  # 上一行留空 = 用配置里的书写顺序。Hexo 用 deepMerge 合并 theme_config，
+  # 站点新增的菜单键总被追加到末尾，靠这里插回期望位置
+
+vendors:
+  rss: /atom.xml
+  rss_navbar: auto    # auto（装了 feed 生成器才输出）/ true / false
 
 search:
   enable: true
@@ -279,6 +313,8 @@ comments:
   enable: false
   type: giscus        # 8 种可选
   lazyload: true
+  waline:
+    serverURL:        # @waline/client v2 必填项，驼峰；写成 server_url 会被自动转换
 ```
 
 完整的注释版配置请直接查看 `_config.yml`（每项都有中文说明）。
@@ -418,6 +454,38 @@ Chrome / Edge / Firefox / Safari 最近两个大版本。使用了 CSS 变量、
 
 ---
 
-## 十一、许可
+## 十一、常见问题
+
+### 平台构建报 `ERR_REQUIRE_ESM`（strip-ansi）
+
+Hexo 8 依赖纯 ESM 的 `strip-ansi@7`，而 `require(ESM)` 要 Node **22.12+ / 20.19+** 才默认开启。只预装到 22.11 的构建机（如 EdgeOne Pages）就会在 `hexo generate` 时报错——本地 Node 版本更高，往往复现不出来。
+
+这不是主题问题，在**站点** `package.json` 降级依赖即可：
+
+```json
+"overrides": { "strip-ansi": "6.0.1", "ansi-regex": "5.0.1" }
+```
+
+按平台环境本地复现：`node --no-experimental-require-module node_modules/hexo/bin/hexo generate`。
+
+### 站点新增的菜单项总排在「更多」之后
+
+Hexo 用 `deepMerge` 合并 `theme_config`，新增的键一律追加到末尾。用 `menu_order` 显式声明顺序即可，见[五、核心配置速查](#五核心配置速查)。
+
+### 笔记文章同时出现在首页 / 归档列表
+
+笔记本质仍是文章（posts），主题只负责把「笔记」侧栏按 `note_categories` 过滤成独立视图。要让它们完全不进博客文章流，需自行过滤 index / archive 生成器，属站点层改动。
+
+### 侧栏挂件显示不全、出现第二条滚动条
+
+主题不再给挂件栏加 `max-height` 与内部滚动。若挂件总高超过一屏，`position: sticky` 会让底部内容停在视口下方，把 `sidebar.sticky` 设为 `false` 让侧栏跟随正文滚动即可。
+
+### 无标题的页面还显示「目录」空面板
+
+已修复：右侧目录栏只在页面真有 h2–h4 标题时才渲染（也支持 front-matter 用 `toc: false` 单独关闭）。
+
+---
+
+## 十二、许可
 
 MIT License。
