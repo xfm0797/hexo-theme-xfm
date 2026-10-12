@@ -121,15 +121,14 @@
     out.push('  grid-template-columns: ' + blogColsLeft(t) + ';');
     out.push('}');
 
-    /* --- Blog 侧边挂件：成列时吸附，单栏时回落到正文下方 --- */
+    /* --- Blog 侧边挂件：成列时吸附，单栏时回落到正文下方 ---
+       刻意不加 max-height / overflow-y：挂件总高（资料卡 + 最新文章 + 分类 +
+       标签云 + 归档）常超一屏，一旦裁切就会出现「侧栏自己的滚动条」并藏掉
+       下方挂件。挂件确实高于一屏时，改用 sidebar.sticky: false 让侧栏跟随正文滚动。 */
     if (blogCols(t) !== 'minmax(0, 1fr)' && widgetSticky) {
       out.push(p + '.widget-column {');
       out.push('  position: sticky;');
       out.push('  top: calc(var(--xfm-nav-h) + 22px);');
-      out.push('  max-height: calc(100vh - var(--xfm-nav-h) - 44px);');
-      out.push('  overflow-y: auto;');
-      out.push('  overscroll-behavior: contain;');
-      out.push('  padding-right: 2px;');
       out.push('}');
     } else {
       out.push(p + '.widget-column {');

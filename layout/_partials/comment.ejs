@@ -3,11 +3,24 @@
   const type = theme.comments && theme.comments.type ? theme.comments.type : 'giscus';
   const conf = (theme.comments && theme.comments[type]) || {};
 
+  // 键名归一：Waline v2 只认驼峰选项（serverURL / requiredMeta / pageSize…），
+  // 直接透传 server_url 会被静默忽略、评论区加载不出来。已写成驼峰的保持原样。
+  const camelize = function (key) {
+    return String(key).replace(/_([a-z0-9])/g, function (_, c) { return c.toUpperCase(); });
+  };
+  const CAMEL_ALIAS = { serverUrl: 'serverURL' };
+  const normalizeKey = function (key) {
+    if (type !== 'waline' || String(key).indexOf('_') === -1) return key;
+    const camel = camelize(key);
+    return CAMEL_ALIAS[camel] || camel;
+  };
+
   let payload = { type: type, opts: {} };
   Object.keys(conf).forEach(function (k) {
     const v = conf[k];
-    if (Array.isArray(v)) payload.opts[k] = v;
-    else if (v !== null && v !== undefined && v !== '') payload.opts[k] = v;
+    const key = normalizeKey(k);
+    if (Array.isArray(v)) payload.opts[key] = v;
+    else if (v !== null && v !== undefined && v !== '') payload.opts[key] = v;
   });
   payload.scheme = (theme.appearance && theme.appearance.scheme) || 'auto';
   payload.lang = config.language || 'zh-CN';

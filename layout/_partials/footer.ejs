@@ -43,8 +43,11 @@
         <span>·</span>
         <a href="<%= url_for('/sitemap.xml') %>"><%- __('common.sitemap') %></a>
         <% } %>
+        <% const rssFeed = xfm_rss(); %>
+        <% if (rssFeed.enable) { %>
         <span>·</span>
-        <a href="<%= url_for((theme.vendors && theme.vendors.rss) || '/atom.xml') %>"><%- __('common.rss') %></a>
+        <a href="<%= url_for(rssFeed.url) %>"><%- __('common.rss') %></a>
+        <% } %>
       </div>
       <% if (theme.footer && theme.footer.icp) { %>
       <div class="footer-record">

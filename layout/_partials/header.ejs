@@ -2,10 +2,28 @@
   const menu = theme.menu || {};
   const navEnable = !(theme.navbar && theme.navbar.enable === false);
   const showTitle = !(theme.appearance && theme.appearance.site_title === false);
+  const rss = xfm_rss();
+
+  // 菜单顺序：theme.menu_order 列出的键按给定顺序靠前，未列出的保持配置里的相对顺序排在后面。
+  // Hexo 用 deepMerge 合并 theme_config，站点新增的菜单键一律被追加到末尾，
+  // 想把「文档 / 笔记」插到「更多」之前，就在这里显式声明顺序。
+  const menuKeys = (function () {
+    const keys = Object.keys(menu);
+    const order = Array.isArray(theme.menu_order) ? theme.menu_order : [];
+    if (!order.length) return keys;
+    const rank = function (k) {
+      const i = order.indexOf(k);
+      return i === -1 ? order.length : i;
+    };
+    return keys
+      .map(function (k, i) { return { k: k, i: i }; })
+      .sort(function (a, b) { return rank(a.k) - rank(b.k) || a.i - b.i; })
+      .map(function (x) { return x.k; });
+  })();
 
   // 菜单里是否已经有指向归档的项，避免笔记模式重复追加
   const norm = function (p) { return String(p || '').replace(/\/+$/, '') || '/'; };
-  const menuHasArchive = Object.keys(menu).some(function (k) {
+  const menuHasArchive = menuKeys.some(function (k) {
     const it = menu[k] || {};
     if (it.path && norm(it.path) === '/archives') return true;
     if (it.children) {
@@ -40,7 +58,7 @@
 
     <nav class="nav-menu" id="navMenu">
       <ul class="nav-list">
-        <% Object.keys(menu).forEach(function (key) {
+        <% menuKeys.forEach(function (key) {
              const item = menu[key] || {};
              const hasChildren = item.children && Object.keys(item.children).length;
         %>
@@ -100,8 +118,8 @@
       </button>
       <% } %>
 
-      <% if (theme.vendors && theme.vendors.rss_navbar !== false) { %>
-      <a class="icon-btn" href="<%= url_for((theme.vendors && theme.vendors.rss) || '/atom.xml') %>" aria-label="<%= __('common.rss') %>" title="<%= __('common.rss') %>">
+      <% if (rss.enable) { %>
+      <a class="icon-btn" href="<%= url_for(rss.url) %>" aria-label="<%= __('common.rss') %>" title="<%= __('common.rss') %>">
         <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-rss"></use></svg>
       </a>
       <% } %>
@@ -132,7 +150,7 @@
     </button>
   </div>
   <nav class="drawer-nav">
-    <% Object.keys(menu).forEach(function (key) {
+    <% menuKeys.forEach(function (key) {
          const item = menu[key] || {};
     %>
     <% if (item.path) { %>

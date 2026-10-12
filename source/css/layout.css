@@ -573,20 +573,57 @@ body.mode-blog .content-wrap {
   border-radius: 20px;
 }
 
+/* 折叠开关：文档树每个分支一个，笔记分组标题也复用它 */
 .xfm-nav-toggle {
-  width: 14px;
-  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   flex: none;
-  opacity: 0.65;
+  padding: 0;
+  color: var(--c-text-faint);
+  border-radius: var(--xfm-radius-sm);
+  transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+}
+
+.xfm-nav-toggle:hover {
+  color: var(--c-text);
+  background: var(--c-surface-hover);
+}
+
+/* 箭头：不依赖图标 sprite，两条边框拼出 chevron */
+.xfm-arrow {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border: solid currentColor;
+  border-width: 0 1.6px 1.6px 0;
+  transform: rotate(45deg);
   transition: transform var(--t-base) var(--ease);
 }
 
-.xfm-nav-group.is-collapsed .xfm-nav-toggle {
-  transform: rotate(-90deg);
+/* 收起态旋转：文档树看 .is-open，笔记分组看 .is-collapsed */
+.xfm-nav-item.has-children:not(.is-open) > .xfm-nav-toggle .xfm-arrow,
+.xfm-nav-group.is-collapsed .xfm-arrow {
+  transform: rotate(-45deg);
 }
 
+/* 收起态用纯 CSS 表达：无 JS 时保持默认展开，不会先闪开再收起 */
+.xfm-nav-item.has-children:not(.is-open) > .xfm-nav-list,
 .xfm-nav-group.is-collapsed .xfm-nav-list {
   display: none;
+}
+
+/* 带子节点的条目：标签占满剩余宽度，箭头固定在右列，子列表独占下一行 */
+.xfm-nav-item.has-children {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.xfm-nav-item.has-children > .xfm-nav-list {
+  grid-column: 1 / -1;
 }
 
 .xfm-nav-list {
@@ -679,6 +716,38 @@ body.mode-blog .content-wrap {
   font-size: 11px;
   font-family: var(--font-mono);
   color: var(--c-text-faint);
+}
+
+/* 无链接的分组标题：与 .xfm-nav-link 同形态，整行可点、可聚焦 */
+.xfm-nav-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  border-radius: var(--xfm-radius-sm);
+  font-size: 13.5px;
+  color: var(--c-text-soft);
+  transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+}
+
+.xfm-nav-item.has-children > .xfm-nav-text {
+  cursor: pointer;
+}
+
+.xfm-nav-item.has-children > .xfm-nav-text:hover,
+.xfm-nav-item.has-children > .xfm-nav-text:focus-visible {
+  color: var(--c-text);
+  background: var(--c-surface-hover);
+}
+
+/* 笔记分组头整行可点 */
+.xfm-nav-group-head {
+  cursor: pointer;
+}
+
+.xfm-nav-group-head:focus-visible {
+  outline: 2px solid var(--c-primary-soft);
+  outline-offset: -2px;
 }
 
 .xfm-nav-empty {

@@ -42,15 +42,25 @@ function slugify(str) {
     .replace(/^-|-$/g, '');
 }
 
-/** 读取配置（点号路径），支持默认值 */
+/** 按点号路径 / 数组下标取值：`post.toc_depth[0]`、`docs.expanded` 均可 */
+function readPath(src, path) {
+  const keys = String(path)
+    .replace(/\[(\d+)\]/g, '.$1')
+    .split('.');
+  return keys.reduce((acc, key) => (acc == null ? acc : acc[key]), src);
+}
+
+/**
+ * 读取配置（点号路径 + 数组下标）。
+ * 解析顺序：站点 theme_config（已被 Hexo 合并进 hexo.theme.config）> 主题 _config.yml > 站点根配置。
+ * 早先只读 hexo.config（站点根），导致主题 _config.yml 里的 notes.* / docs.* / post.* 写了不生效。
+ */
 function getConfig(hexo, path, dft) {
-  const src = hexo && hexo.config ? hexo.config : {};
-  return path.split('.').reduce((acc, key) => {
-    if (acc == null || typeof acc !== 'object') return undefined;
-    return acc[key];
-  }, src) !== undefined
-    ? path.split('.').reduce((acc, key) => (acc == null ? acc : acc[key]), src)
-    : dft;
+  const themeCfg = (hexo && hexo.theme && hexo.theme.config) || {};
+  const siteCfg = (hexo && hexo.config) || {};
+  const src = Object.assign({}, siteCfg, themeCfg);
+  const value = readPath(src, path);
+  return value === undefined ? dft : value;
 }
 
 /** 从 Markdown/Math/HTML 混合内容中抽取标题层级 */
@@ -87,17 +97,31 @@ function buildTree(headings) {
   return root.children;
 }
 
-function renderNavNodes(nodes, urlFor, activePath, depth) {
+/**
+ * 递归渲染侧栏导航树。
+ * 收起 / 展开是「纯 CSS + 一个类」：`.has-children:not(.is-open) > .xfm-nav-list{display:none}`。
+ * 因此无 JS 时默认展开、不会闪开；有 JS 时由 core.js 切换 .is-open。
+ *
+ * opts.expanded     —— 默认是否展开全部分支（docs.expanded，默认 true）
+ * opts.auto_expand  —— 是否自动展开当前页所在分支（docs.auto_expand，默认 true）
+ * opts.toggle_label —— 展开 / 收起按钮的无障碍文案
+ */
+function renderNavNodes(nodes, urlFor, activePath, depth, opts) {
+  const o = opts || {};
+  const expanded = o.expanded !== false;
+  const autoExpand = o.auto_expand !== false;
+  const toggleLabel = o.toggle_label || 'toggle';
   let html = '<ul class="xfm-nav-list depth-' + depth + '">';
   nodes.forEach((node) => {
     const hasChildren = node.children && node.children.length;
     const active = node.path && activePath && normalizePath(node.path) === activePath;
-    const isParent = node.children && containsActive(node.children, activePath);
+    const isParent = autoExpand && node.children && containsActive(node.children, activePath);
+    const open = Boolean(hasChildren) && (expanded || isParent);
     html +=
       '<li class="xfm-nav-item' +
       (hasChildren ? ' has-children' : '') +
       (active ? ' is-active' : '') +
-      (isParent ? ' is-open' : '') +
+      (open ? ' is-open' : '') +
       '">';
     if (node.path) {
       html +=
@@ -114,8 +138,13 @@ function renderNavNodes(nodes, urlFor, activePath, depth) {
       html += '<span class="xfm-nav-text">' + escapeHTML(node.title) + '</span>';
     }
     if (hasChildren) {
-      html += '<button class="xfm-nav-toggle" type="button" aria-label="toggle"><i class="xfm-arrow"></i></button>';
-      html += renderNavNodes(node.children, urlFor, activePath, depth + 1);
+      html +=
+        '<button class="xfm-nav-toggle" type="button" aria-expanded="' +
+        (open ? 'true' : 'false') +
+        '" aria-label="' +
+        escapeHTML(toggleLabel) +
+        '"><i class="xfm-arrow"></i></button>';
+      html += renderNavNodes(node.children, urlFor, activePath, depth + 1, opts);
     }
     html += '</li>';
   });
@@ -139,6 +168,36 @@ function normalizePath(p) {
   s = s.replace(/index\.html$/i, '').replace(/\.html$/i, '/');
   if (s.length > 1 && s.charAt(s.length - 1) !== '/') s += '/';
   return s;
+}
+
+/** 配置值归一为字符串数组：['a'] / "a, b" / 空 均可 */
+function toArray(v) {
+  if (v === null || v === undefined || v === '') return [];
+  if (Array.isArray(v)) return v.map((x) => String(x).trim()).filter(Boolean);
+  return String(v)
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
+/** wanted 为空表示不过滤；否则要求 values 与 wanted 有交集 */
+function matchAny(values, wanted) {
+  if (!wanted || !wanted.length) return true;
+  const list = (values || []).map((v) => String(v).trim());
+  return wanted.some((w) => list.indexOf(w) > -1);
+}
+
+/**
+ * 站点是否装了 feed 生成器（hexo-generator-feed 注册名形如 atom / rss2）。
+ * 探测失败时返回 true —— 保守显示，避免误伤真正配了订阅源却换个插件实现的站点。
+ */
+function hasFeedGenerator(hexo) {
+  try {
+    const list = hexo.extend.generator.list();
+    return Object.keys(list).some((n) => /^(feed|rss|rss2|atom)$/i.test(n));
+  } catch (e) {
+    return true;
+  }
 }
 
 module.exports = function (hexo) {
@@ -399,8 +458,14 @@ module.exports = function (hexo) {
 
   /** 文章正文目录 */
   register('xfm_toc', function (content, wrapperClass) {
-    const min = Number(getConfig(hexo, 'post.toc_depth[0]', 2));
-    const max = Number(getConfig(hexo, 'post.toc_depth[1]', 4));
+    // toc_depth 是「要收录的层级列表」（如 [2,3,4]），取最小 / 最大当范围；
+    // 写成两元素 [2,4] 也等价。早先按 [0]/[1] 取，遇到 [2,3,4] 会误判成 2~3。
+    const rawDepth = getConfig(hexo, 'post.toc_depth', [2, 4]);
+    const depthList = (Array.isArray(rawDepth) ? rawDepth : String(rawDepth).split(','))
+      .map(Number)
+      .filter((n) => isFinite(n));
+    const min = depthList.length ? Math.min.apply(null, depthList) : 2;
+    const max = depthList.length ? Math.max.apply(null, depthList) : 4;
     const headings = extractHeadings(content, min, max);
     if (!headings.length) return '';
     const tree = buildTree(headings);
@@ -450,18 +515,40 @@ module.exports = function (hexo) {
 
     items = items.map((it) => normalizeDocsItem(it));
     if (!items.length) return '<div class="xfm-nav-empty">' + escapeHTML(this.__('docs.no_docs')) + '</div>';
-    return '<nav class="xfm-sidebar-nav">' + renderNavNodes(items, urlFor, current, 1) + '</nav>';
+    const navOpts = {
+      expanded: getConfig(hexo, 'docs.expanded', true) !== false,
+      auto_expand: getConfig(hexo, 'docs.auto_expand', true) !== false,
+      toggle_label: this.__('docs.toggle')
+    };
+    return '<nav class="xfm-sidebar-nav">' + renderNavNodes(items, urlFor, current, 1, navOpts) + '</nav>';
   });
 
-  /** 笔记模式侧边栏（按分类 / 日期分组） */
+  /**
+   * 笔记模式侧边栏（按分类 / 日期分组）
+   * 收录范围由 notes.note_categories / note_tags 决定：两者都留空 = 全站文章；
+   * 同时配置时取交集。分组 / 排序 / 折叠全部读配置，风格沿用主题既有 class。
+   */
   register('xfm_notes_nav', function () {
     const urlFor = this.url_for.bind(this);
     const groupBy = getConfig(hexo, 'notes.group_by', 'category');
     const sortBy = getConfig(hexo, 'notes.sort_by', 'date');
     const order = getConfig(hexo, 'notes.order', 'desc') === 'asc' ? 1 : -1;
     const showDate = getConfig(hexo, 'notes.show_date', true);
+    const collapsed = getConfig(hexo, 'notes.collapsed', false) === true;
     const current = normalizePath(this.page ? this.page.path : '');
-    const posts = (this.site.posts.data || []).filter((p) => p.title);
+    const wantCats = toArray(getConfig(hexo, 'notes.note_categories', []));
+    const wantTags = toArray(getConfig(hexo, 'notes.note_tags', []));
+    const pick = (p, key) =>
+      p[key] && p[key].data ? p[key].data.map((x) => x.name) : [];
+
+    const all = (this.site.posts.data || []).filter((p) => p.title);
+    const posts = all.filter(
+      (p) => matchAny(pick(p, 'categories'), wantCats) && matchAny(pick(p, 'tags'), wantTags)
+    );
+
+    if (!posts.length) {
+      return '<div class="xfm-nav-empty">' + escapeHTML(this.__('notes.empty_group')) + '</div>';
+    }
 
     const sorted = posts.slice().sort((a, b) => {
       if (sortBy === 'title') return order * a.title.localeCompare(b.title);
@@ -469,58 +556,74 @@ module.exports = function (hexo) {
       return order * (new Date(a.date) - new Date(b.date));
     });
 
-    const groups = new Map();
-    sorted.forEach((p) => {
-      let key = '未分组';
-      if (groupBy === 'category') {
-        const cats = p.categories && p.categories.data && p.categories.data.length ? p.categories.data : [];
-        key = cats.length ? cats.map((c) => c.name).join(' / ') : '未分组';
-      } else if (groupBy === 'date') {
-        key = (p.date.format ? p.date.format('YYYY-MM') : String(p.date).slice(0, 7)) || '未分组';
+    const renderLink = (p) => {
+      const active = normalizePath(p.path) === current;
+      let item =
+        '<li class="xfm-nav-item' + (active ? ' is-active' : '') + '">' +
+        '<a class="xfm-nav-link' + (active ? ' is-active' : '') + '" href="' +
+        escapeHTML(urlFor(p.path)) +
+        '"' +
+        (active ? ' aria-current="page"' : '') +
+        '><span class="xfm-nav-link-title">' +
+        escapeHTML(p.title) +
+        '</span>';
+      if (showDate) {
+        item +=
+          '<span class="xfm-nav-link-date">' +
+          escapeHTML(p.date.format ? p.date.format('MM-DD') : String(p.date).slice(5, 10)) +
+          '</span>';
       }
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(p);
-    });
-
-    if (!groups.size) return '<div class="xfm-nav-empty">' + escapeHTML(this.__('notes.empty_group')) + '</div>';
+      return item + '</a></li>';
+    };
 
     let html = '<nav class="xfm-sidebar-nav xfm-notes-nav">';
     html +=
       '<div class="xfm-notes-count">' +
       escapeHTML(this.__('notes.total_notes', posts.length)) +
       '</div>';
-    groups.forEach((list, key) => {
-      const open = list.some((p) => normalizePath(p.path) === current);
-      html += '<div class="xfm-nav-group' + (open ? ' is-open' : '') + '">';
+
+    // group_by: none —— 不分组的平铺列表，没有可折叠的分组头
+    if (groupBy === 'none') {
       html +=
-        '<div class="xfm-nav-group-head"><span class="xfm-nav-group-title">' +
+        '<ul class="xfm-nav-list depth-1 xfm-notes-flat">' +
+        sorted.map(renderLink).join('') +
+        '</ul>';
+      return html + '</nav>';
+    }
+
+    const groups = new Map();
+    sorted.forEach((p) => {
+      let key = this.__('notes.ungrouped');
+      if (groupBy === 'date') {
+        key = (p.date.format ? p.date.format('YYYY-MM') : String(p.date).slice(0, 7)) || key;
+      } else {
+        const cats = pick(p, 'categories');
+        if (cats.length) key = cats.join(' / ');
+      }
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(p);
+    });
+
+    const toggleLabel = this.__('notes.toggle');
+    groups.forEach((list, key) => {
+      const open = list.some((p) => normalizePath(p.path) === current) || !collapsed;
+      html +=
+        '<div class="xfm-nav-group' +
+        (open ? ' is-open' : ' is-collapsed') +
+        '">';
+      html +=
+        '<div class="xfm-nav-group-head" role="button" tabindex="0" aria-expanded="' +
+        (open ? 'true' : 'false') +
+        '" aria-label="' +
+        escapeHTML(toggleLabel + ': ' + key) +
+        '"><span class="xfm-nav-group-title">' +
         escapeHTML(key) +
         '</span><span class="xfm-nav-group-count">' +
         list.length +
         '</span><i class="xfm-arrow"></i></div>';
-      html += '<ul class="xfm-nav-list depth-1">';
-      list.forEach((p) => {
-        const active = normalizePath(p.path) === current;
-        html += '<li class="xfm-nav-item' + (active ? ' is-active' : '') + '">';
-        html +=
-          '<a class="xfm-nav-link' +
-          (active ? ' is-active' : '') +
-          '" href="' +
-          escapeHTML(urlFor(p.path)) +
-          '"' +
-          (active ? ' aria-current="page"' : '') +
-          '><span class="xfm-nav-link-title">' +
-          escapeHTML(p.title) +
-          '</span>';
-        if (showDate) {
-          html +=
-            '<span class="xfm-nav-link-date">' +
-            escapeHTML(p.date.format ? p.date.format('MM-DD') : String(p.date).slice(5, 10)) +
-            '</span>';
-        }
-        html += '</a></li>';
-      });
-      html += '</ul></div>';
+      html +=
+        '<ul class="xfm-nav-list depth-1">' + list.map(renderLink).join('') + '</ul>';
+      html += '</div>';
     });
     html += '</nav>';
     return html;
@@ -560,6 +663,23 @@ module.exports = function (hexo) {
     if (n < 1000) return String(n);
     if (n < 10000) return (n / 1000).toFixed(1) + 'k';
     return (n / 10000).toFixed(1) + 'w';
+  });
+
+  /**
+   * RSS 入口（导航图标 / head 自动发现 / 页脚链接共用一份判定）
+   * vendors.rss_navbar:
+   *   auto（默认）—— 站点装了 feed 生成器才输出，避免未装插件时的空链接
+   *   true       —— 强制输出
+   *   false      —— 隐藏
+   */
+  register('xfm_rss', function () {
+    const vendors = (hexo.theme && hexo.theme.config && hexo.theme.config.vendors) || {};
+    const setting = vendors.rss_navbar === undefined ? 'auto' : vendors.rss_navbar;
+    let enable;
+    if (setting === false || setting === 'false') enable = false;
+    else if (setting === true || setting === 'true') enable = true;
+    else enable = hasFeedGenerator(hexo);
+    return { enable: enable, url: vendors.rss || '/atom.xml' };
   });
 
   /** 配置读取（模板里兜底用） */

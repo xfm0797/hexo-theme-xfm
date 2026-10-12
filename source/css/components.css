@@ -551,6 +551,18 @@
   transform: translateY(-1px);
 }
 
+/* 不可用的 Prev / Next 占位：保留结构占位、禁掉交互，避免各页页码左右偏移 */
+.page-btn.is-disabled,
+.page-btn.is-disabled:hover {
+  color: var(--c-text-faint);
+  background: var(--c-surface-alt);
+  border-color: var(--c-border);
+  transform: none;
+  cursor: default;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .page-btn .xfm-icon {
   width: 15px;
   height: 15px;

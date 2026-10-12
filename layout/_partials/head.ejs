@@ -44,8 +44,9 @@
 
 <link rel="icon" href="<%= url_for(theme.favicon || '/images/favicon.svg') %>">
 <link rel="apple-touch-icon" href="<%= url_for(theme.avatar || '/images/avatar.svg') %>">
-<% if (theme.vendors && theme.vendors.rss_navbar !== false) { %>
-<link rel="alternate" type="application/atom+xml" title="<%= siteName %>" href="<%= url_for((theme.vendors && theme.vendors.rss) || '/atom.xml') %>">
+<% const rssFeed = xfm_rss(); %>
+<% if (rssFeed.enable) { %>
+<link rel="alternate" type="application/atom+xml" title="<%= siteName %>" href="<%= url_for(rssFeed.url) %>">
 <% } %>
 <% if (theme.seo && theme.seo.canonical !== false) { %>
 <link rel="canonical" href="<%= decodeURI(full_url_for(is_home() ? config.root : (page.path || ''))) %>">

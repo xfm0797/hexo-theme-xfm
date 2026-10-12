@@ -95,11 +95,14 @@ docs:
   last_modified: 最后更新于
   edit_this_page: 在 GitHub 上编辑此页
   no_docs: 暂无文档目录，请在 source/_data/docs.yml 中配置
+  toggle: 展开 / 收起
 
 notes:
   sidebar: 笔记目录
   total_notes: 共 %s 篇笔记
   empty_group: 暂无笔记
+  ungrouped: 未分组
+  toggle: 展开 / 收起分组
 
 archive:
   title: 归档

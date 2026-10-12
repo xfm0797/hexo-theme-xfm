@@ -94,11 +94,14 @@ docs:
   last_modified: Last updated on
   edit_this_page: Edit this page on GitHub
   no_docs: No sidebar defined. Create source/_data/docs.yml.
+  toggle: Expand / collapse
 
 notes:
   sidebar: Notes
   total_notes: '%s notes'
   empty_group: No notes yet
+  ungrouped: Ungrouped
+  toggle: Expand / collapse group
 
 archive:
   title: Archives

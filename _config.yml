@@ -177,6 +177,12 @@ menu:
         path: /about/
         icon: user
 
+# 菜单显示顺序（写菜单键名；未列出的键按配置里的相对顺序排在后面）
+# Hexo 用 deepMerge 合并 theme_config，站点新增的菜单键总会被追加到末尾，
+# 想把「文档 / 笔记」插到「更多」之前，就在这里显式声明：
+# menu_order: [首页, 归档, 分类, 标签, 文档, 笔记, 更多]
+menu_order: []
+
 # ==============================================================================
 # 首页（Blog 模式）
 # ==============================================================================
@@ -252,7 +258,7 @@ post:
 sidebar:
   # 位置: left / right / none
   position: right
-  # 是否在大屏 sticky
+  # 是否在大屏 sticky（挂件总高超过一屏时建议关闭，否则底部挂件要滚到底才看得到）
   sticky: true
   # 挂件列表（按数组顺序渲染）
   widgets:
@@ -284,18 +290,22 @@ sidebar:
 # 笔记模式（mode: notes）
 # ==============================================================================
 notes:
-  # 侧边栏分组依据: category / date / none
+  # 侧边栏分组依据: category / date / none（none = 平铺列表，不出现分组头）
   group_by: category
   # 每组内的排序: title / date / order
   sort_by: date
   # 排序方向: asc / desc
   order: desc
-  # 是否默认折叠分组
+  # 分组是否默认折叠（当前页所在分组始终展开）
   collapsed: false
   # 侧边栏是否显示搜索框
   search: true
   # 是否显示每篇笔记的日期
   show_date: true
+  # 收录范围：按分类 / 标签过滤侧栏里的文章
+  # 两者都留空 = 收录全站文章；同时配置时取交集；单个值或数组均可
+  note_categories: []
+  note_tags: []
   # 正文最大宽度（px）
   content_width: 820
   # 是否显示右侧内置目录（不占用 generate 的 toc）
@@ -313,9 +323,9 @@ docs:
   #         path: /docs/install/
   # 若 _data/docs.yml 不存在，则自动按页面 order + title 生成侧边栏
   data_file: docs
-  # 是否默认展开全部节点
+  # 是否默认展开全部节点（false 时只展开当前页所在的分支）
   expanded: true
-  # 当前页面所在分支是否自动展开
+  # 当前页面所在分支是否自动展开（expanded: true 时全部展开，此项无差别）
   auto_expand: true
   # 是否显示上下篇导航
   page_nav: true
@@ -427,8 +437,10 @@ comments:
     dark_theme: github-dark
 
   # --- Waline (需自建服务端) ---
+  # @waline/client v2 只认驼峰 serverURL；写成 server_url 会被自动转换（向下兼容），
+  # 新站点建议直接用 serverURL。
   waline:
-    server_url:
+    serverURL:
     emoji:
       - https://cdn.jsdelivr.net/gh/walinejs/emojis/weibo
     lang: zh-CN
@@ -501,8 +513,11 @@ vendors:
 
   # RSS 链接（留空则自动 /atom.xml）
   rss:
-  # 是否在导航栏显示 RSS 图标
-  rss_navbar: true
+  # RSS 入口显示策略，同时作用于导航栏图标、页脚链接与 head 自动发现链接
+  #   auto —— 站点装了 feed 生成器（如 hexo-generator-feed）才输出，默认
+  #   true —— 强制输出（自行实现订阅源时用）
+  #   false —— 隐藏
+  rss_navbar: auto
 
   # 是否启用 PWA  meta（需自行提供 manifest）
   pwa: false

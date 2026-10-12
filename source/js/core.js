@@ -456,13 +456,129 @@
   });
 
   /* ------------------------------------------------------------------ *
-   * 侧栏分组折叠
+   * 侧栏分组折叠（笔记模式）
    * ------------------------------------------------------------------ */
   $$('.xfm-nav-group-head').forEach(function (head) {
     head.addEventListener('click', function (e) {
       e.preventDefault();
       var group = head.closest('.xfm-nav-group');
-      if (group) group.classList.toggle('is-collapsed');
+      if (!group) return;
+      var collapsed = group.classList.toggle('is-collapsed');
+      head.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    });
+    head.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      head.click();
+    });
+  });
+
+  /* ------------------------------------------------------------------ *
+   * 侧栏导航树展开 / 收起（文档模式的目录树，笔记分组头之外的层级）
+   * 收起态本身由 CSS 的 .is-open 决定，这里只切换类与无障碍属性。
+   * 模板已按 docs.expanded / docs.auto_expand 写好初始 is-open，
+   * 因此无 JS 时整棵树保持可读，不会出现「点了没反应」。
+   * ------------------------------------------------------------------ */
+  (function () {
+    var trees = $$('.xfm-sidebar-nav');
+    if (!trees.length) return;
+
+    function syncText(item) {
+      if (!item) return;
+      var text = item.querySelector(':scope > .xfm-nav-text');
+      if (text) {
+        text.setAttribute('aria-expanded', item.classList.contains('is-open') ? 'true' : 'false');
+      }
+    }
+
+    function toggle(item) {
+      if (!item) return;
+      var open = !item.classList.contains('is-open');
+      item.classList.toggle('is-open', open);
+      var btn = item.querySelector(':scope > .xfm-nav-toggle');
+      if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      syncText(item);
+    }
+
+    // 无链接的分组标题（子节点的父级）补上按钮语义，可点击、可 Tab 聚焦
+    $$('.xfm-nav-item.has-children > .xfm-nav-text').forEach(function (text) {
+      text.setAttribute('role', 'button');
+      text.setAttribute('tabindex', '0');
+    });
+    $$('.xfm-nav-item.has-children').forEach(syncText);
+
+    trees.forEach(function (tree) {
+      tree.addEventListener('click', function (e) {
+        var btn = e.target.closest('.xfm-nav-toggle');
+        if (btn) {
+          e.preventDefault();
+          toggle(btn.closest('.xfm-nav-item'));
+          return;
+        }
+        var text = e.target.closest('.xfm-nav-text');
+        if (text && text.parentElement && text.parentElement.classList.contains('has-children')) {
+          e.preventDefault();
+          toggle(text.parentElement);
+        }
+      });
+      tree.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        var text = e.target;
+        if (!text || !text.classList || !text.classList.contains('xfm-nav-text')) return;
+        if (text.getAttribute('role') !== 'button') return;
+        e.preventDefault();
+        toggle(text.parentElement);
+      });
+    });
+  })();
+
+  /* ------------------------------------------------------------------ *
+   * 选项卡
+   * 标签插件产出：.xfm-tabs[data-active] > .xfm-tabs-nav > .xfm-tab-btn[data-tab-index]
+   *                                    .xfm-tabs-panels > .xfm-tab-panel[data-tab-index]
+   * 样式（plugins.css）里 is-active 决定显隐，这里负责切换与键盘操作。
+   * ------------------------------------------------------------------ */
+  $$('.xfm-tabs').forEach(function (wrap) {
+    var btns = $$('.xfm-tab-btn', wrap);
+    var panels = $$('.xfm-tab-panel', wrap);
+    if (!btns.length || !panels.length) return;
+
+    panels.forEach(function (panel, i) {
+      if (!panel.id) panel.id = (wrap.id || 'xfm-tabs') + '-panel-' + i;
+      panel.setAttribute('role', 'tabpanel');
+      panel.setAttribute('tabindex', '0');
+    });
+
+    function activate(index, focus) {
+      btns.forEach(function (btn, i) {
+        var on = i === index;
+        btn.classList.toggle('is-active', on);
+        btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        btn.setAttribute('tabindex', on ? '0' : '-1');
+        if (on && focus) btn.focus();
+      });
+      panels.forEach(function (panel, i) {
+        var on = i === index;
+        panel.classList.toggle('is-active', on);
+        panel.setAttribute('aria-hidden', on ? 'false' : 'true');
+      });
+      wrap.setAttribute('data-active', String(index));
+    }
+
+    var initial = parseInt(wrap.getAttribute('data-active'), 10);
+    if (!(initial >= 0 && initial < btns.length)) initial = 0;
+    activate(initial, false);
+
+    btns.forEach(function (btn, i) {
+      if (panels[i]) btn.setAttribute('aria-controls', panels[i].id);
+      btn.addEventListener('click', function () { activate(i, false); });
+      btn.addEventListener('keydown', function (e) {
+        var dir = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1
+          : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+        if (!dir) return;
+        e.preventDefault();
+        activate((i + dir + btns.length) % btns.length, true);
+      });
     });
   });
 

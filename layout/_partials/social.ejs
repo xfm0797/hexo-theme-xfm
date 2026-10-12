@@ -1,7 +1,14 @@
 <%
   const social = theme.social || {};
   const socialClass = (typeof extraClass !== 'undefined' && extraClass) || '';
-  const keys = Object.keys(social).filter(function (k) { return social[k]; });
+  // RSS 社交入口与导航栏 / 页脚 / head 自动发现共用一份判定：
+  // 没装 feed 生成器（且未强制开启）时不输出，避免指向不存在订阅源的空链接。
+  const rssOn = xfm_rss().enable;
+  const keys = Object.keys(social).filter(function (k) {
+    if (!social[k]) return false;
+    if (k === 'rss' && !rssOn) return false;
+    return true;
+  });
 %><% if (keys.length) { %>
 <div class="social-links <%= socialClass %>">
   <% keys.forEach(function (name) {
