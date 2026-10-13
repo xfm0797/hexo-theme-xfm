@@ -117,4 +117,11 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@<%= theme.vendors.katex_version || '0.16.9' %>/dist/katex.min.css">
 <% } %>
 
+<% const __ads = xfm_ads(); %>
+<% if (__ads.load_script) { %>
+<%# 带 client 参数的脚本 = 允许页面级自动广告；不带则仅供下方手动广告位使用 %>
+<meta name="google-adsense-account" content="<%= __ads.client %>">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js<%= __ads.auto_ads ? '?client=' + __ads.client : '' %>" crossorigin="anonymous"></script>
+<% } %>
+
 <% if (theme.custom && theme.custom.head) { %><%- theme.custom.head %><% } %>

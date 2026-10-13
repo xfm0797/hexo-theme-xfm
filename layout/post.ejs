@@ -35,9 +35,13 @@
     </div>
     <% } %>
 
+    <%- partial('_partials/ads', { slot: 'post_top' }) %>
+
     <div class="post-content xfm-content" itemprop="articleBody">
       <%- page.content %>
     </div>
+
+    <%- partial('_partials/ads', { slot: 'post_bottom' }) %>
 
     <% if (tags.length && theme.post && theme.post.tags !== false) { %>
     <div class="post-tags-block">

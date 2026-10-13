@@ -29,6 +29,7 @@ common:
   prev: Prev
   next: Next
   language: Language
+  ad: Advertisement
 
 search:
   placeholder: Search posts, notes and docs…

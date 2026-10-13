@@ -30,6 +30,7 @@ common:
   prev: 上一页
   next: 下一页
   language: 语言
+  ad: 广告
 
 search:
   placeholder: 搜索文章、笔记与文档…

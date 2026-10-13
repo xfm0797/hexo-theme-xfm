@@ -1,5 +1,6 @@
 <%
-  // 多语言：前端脚本需要的运行时开关
+  // AdSense / 多语言：前端脚本需要的运行时开关
+  const __adsCfg = xfm_ads();
   const __langCfg = xfm_lang();
 %>
 <script>
@@ -7,6 +8,10 @@
     root: '<%= config.root || '/' %>',
     mode: '<%= (theme.mode || 'blog') %>',
     lang: '<%= __langCfg.current %>',
+    ads: {
+      enable: <%= __adsCfg.allowed ? 'true' : 'false' %>,
+      lazy: <%= __adsCfg.lazy ? 'true' : 'false' %>
+    },
     langSwitcher: {
       enable: <%= __langCfg.enable ? 'true' : 'false' %>,
       style: '<%= __langCfg.style %>',
@@ -74,6 +79,9 @@
 <script src="<%- url_for('/js/toc.js') %>"></script>
 <% if (theme.search && theme.search.enable !== false) { %>
 <script src="<%- url_for('/js/search.js') %>"></script>
+<% } %>
+<% if (__adsCfg.load_script) { %>
+<script src="<%- url_for('/js/ads.js') %>"></script>
 <% } %>
 
 <% if (theme.vendors && theme.vendors.math === 'katex' && theme.vendors.math_auto_render !== false) { %>

@@ -43,10 +43,18 @@
 </section>
 <% } %>
 
+<%
+  // 列表内嵌广告位：每 hasInterval 篇文章插一个（末篇之后不插）
+  const ADS = xfm_ads();
+  const adInterval = ADS.allowed && ADS.slots.list_inline ? ADS.list_interval : 0;
+%>
 <% if (list.length) { %>
 <div class="post-list post-layout-<%= layoutType %><%= stickyPosts.length ? ' has-sticky' : '' %>">
   <% list.forEach(function (post, i) { %>
   <%- partial('_partials/post/card', { post: post, index: i, layoutType: layoutType, showCover: showCover, alternate: alternate }) %>
+  <% if (adInterval && (i + 1) % adInterval === 0 && i + 1 < list.length) { %>
+  <%- partial('_partials/ads', { slot: 'list_inline' }) %>
+  <% } %>
   <% }); %>
 </div>
 <% } else { %>

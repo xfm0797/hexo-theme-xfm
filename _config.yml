@@ -292,6 +292,7 @@ sidebar:
   # 是否在大屏 sticky（挂件总高超过一屏时建议关闭，否则底部挂件要滚到底才看得到）
   sticky: true
   # 挂件列表（按数组顺序渲染）
+  # 可选: profile / recent_posts / categories / tagcloud / archive_list / toc / adsense
   widgets:
     - profile
     - recent_posts
@@ -558,6 +559,42 @@ vendors:
   external_link: true
   # 是否启用 Markdown 内容净化（标题锚点、表格包裹、任务列表）
   content_enhance: true
+
+# ==============================================================================
+# Google AdSense 广告
+# ==============================================================================
+# 广告单元 id 在 AdSense 后台「广告 → 按广告单元」创建后填进下面的 slots，
+# 没填 id 的位置不会输出任何 DOM，因此可以只启用其中几个。
+adsense:
+  # 总开关（关闭时既不加载脚本，也不输出广告位）
+  enable: false
+  # 发布商 ID，形如 ca-pub-1234567890123456
+  client: ""
+  # 页面级自动广告: 开启后 head 里的脚本会带上 client 参数，由 AdSense 自动投放；
+  # 关闭则只加载不带参数的脚本，仅供下面的手动广告位使用
+  auto_ads: true
+  # 广告位延迟加载（滚动到附近再触发填充，首屏更快）
+  lazy: true
+  # 预览 / 本地调试: 给广告单元加 data-adtest="on"，只显示占位不产生真实展示
+  test: false
+  # 广告单元默认样式
+  format: auto                  # auto / fluid / rectangle / horizontal / vertical
+  full_width_responsive: true   # 自适应宽度
+  layout_key: ""                # 进阶: 信息流广告的 data-ad-layout-key
+  # 是否在广告位上方显示「广告」标识（合规建议开启）
+  label: false
+  # 各广告位的广告单元 id（数字串，请用引号包起来）
+  slots:
+    post_top:                   # 文章正文上方
+    post_bottom:                # 文章正文下方
+    page_top:                   # 独立页面（关于 / 友链 / 文档 / 笔记等）正文上方
+    page_bottom:                # 独立页面正文下方
+    list_inline:                # 首页 / 归档列表内嵌
+    sidebar:                    # 侧边栏挂件位（需在 sidebar.widgets 里加 adsense）
+  # 列表页每多少篇文章插入一个 list_inline 广告位（0 = 不插入）
+  list_interval: 4
+  # 路径命中这些片段的页面不显示广告，如 ['/about/', '/privacy/']
+  exclude_pages: []
 
 # ==============================================================================
 # SEO

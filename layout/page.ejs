@@ -24,9 +24,13 @@
   </div>
   <% } %>
 
+  <%- partial('_partials/ads', { slot: 'page_top' }) %>
+
   <div class="post-content xfm-content">
     <%- page.content %>
   </div>
+
+  <%- partial('_partials/ads', { slot: 'page_bottom' }) %>
 
   <% if (isDocs) { %>
   <%

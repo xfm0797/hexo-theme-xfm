@@ -1,0 +1,26 @@
+<%
+  /*
+   * Google AdSense 广告单元
+   * 用法（注意别把 EJS 标签写进注释里，会让编译器找不到闭合）：
+   *   partial('_partials/ads', { slot: 'post_top' })
+   * 未启用 / 未填 client / 该位没填广告单元 id / 页面被 exclude_pages 排除 /
+   * front-matter 里写了 ads: false —— 以上任一情况都不输出任何 DOM。
+   */
+  const ADS = xfm_ads();
+  const adPos = String((locals && locals.slot) || '');
+  const adUnit = ADS.slots[adPos] || '';
+  const showAd = Boolean(ADS.allowed && adUnit);
+%>
+<% if (showAd) { %>
+<aside class="ad-slot ad-slot-<%= adPos %>" data-ad-position="<%= adPos %>" aria-label="<%= ADS.label_text %>">
+  <% if (ADS.label) { %><span class="ad-label"><%= ADS.label_text %></span><% } %>
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="<%= ADS.client %>"
+       data-ad-slot="<%= adUnit %>"
+       data-ad-format="<%= ADS.format %>"
+       <% if (ADS.full_width_responsive) { %>data-full-width-responsive="true"<% } %>
+       <% if (ADS.layout_key) { %>data-ad-layout-key="<%= ADS.layout_key %>"<% } %>
+       <% if (ADS.test) { %>data-adtest="on"<% } %>></ins>
+</aside>
+<% } %>

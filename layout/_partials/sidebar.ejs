@@ -16,6 +16,8 @@
       <%- partial('_partials/widgets/tagcloud') %>
     <% } else if (name === 'archive_list') { %>
       <%- partial('_partials/widgets/archive-list') %>
+    <% } else if (name === 'adsense' || name === 'ad') { %>
+      <%- partial('_partials/ads', { slot: 'sidebar' }) %>
     <% } %>
   <% }); %>
 </div>

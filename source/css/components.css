@@ -1510,3 +1510,53 @@
 .toc-column .toc-header::after {
   content: none;
 }
+
+/* --------------------------------------------------------------------------
+   广告位（Google AdSense）
+   容器风格与卡片一致，避免广告与正文在视觉上打架；
+   广告单元给一个最小高度占位，减少加载时的布局抖动
+   -------------------------------------------------------------------------- */
+.ad-slot {
+  position: relative;
+  margin: 26px 0;
+  padding: 12px;
+  border-radius: var(--xfm-radius);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  overflow: hidden;
+}
+
+.ad-slot .adsbygoogle {
+  display: block;
+  width: 100%;
+  min-height: 90px;
+}
+
+.ad-label {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--c-text-faint);
+}
+
+.ad-slot-post_top {
+  margin-top: 18px;
+}
+
+.ad-slot-list_inline {
+  margin: 16px 0 20px;
+}
+
+.ad-slot-sidebar,
+.ad-slot-ad-sidebar {
+  margin: 0 0 20px;
+}
+
+/* 侧栏挂件位跟随挂件宽度 */
+.widget-column .ad-slot {
+  padding: 10px;
+}

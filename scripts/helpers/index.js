@@ -777,6 +777,50 @@ module.exports = function (hexo) {
   });
 
   /**
+   * Google AdSense（脚本注入 / 广告位渲染共用一份判定）
+   * allowed 为 false 时模板不输出任何广告单元；load_script 决定是否注入 adsbygoogle.js
+   */
+  register('xfm_ads', function () {
+    const cfg = getConfig(hexo, 'adsense', {}) || {};
+    const enabled = cfg.enable === true || cfg.enable === 'true';
+    const client = String(cfg.client == null ? '' : cfg.client).trim();
+    const slots = {};
+    Object.keys(cfg.slots || {}).forEach(function (k) {
+      const v = cfg.slots[k];
+      if (v !== null && v !== undefined && String(v).trim() !== '') slots[k] = String(v).trim();
+    });
+    const excludes = toArray(cfg.exclude_pages);
+    // page.path 形如 "about/index.html"（无前导斜杠），配置里通常写 "/about/"，
+    // 两侧都补上前导斜杠再比对，避免写 `/about/` 时永远匹配不上
+    const pagePath = '/' + String((this.page && this.page.path) || '').replace(/^\/+/, '');
+    const excluded = excludes.some(function (p) {
+      return pagePath.indexOf('/' + String(p).replace(/^\/+/, '')) > -1;
+    });
+    // front-matter 里 ads: false 可单独关掉某一篇
+    const pageOff = this.page && this.page.ads === false;
+    const allowed = enabled && !!client && !pageOff && !excluded;
+    const hasSlot = Object.keys(slots).length > 0;
+    return {
+      enable: enabled,
+      client: client,
+      allowed: allowed,
+      slots: slots,
+      has_slot: hasSlot,
+      auto_ads: cfg.auto_ads !== false,
+      // 关掉自动广告时仍要加载脚本 —— 手动广告位（<ins>）没有脚本不会被填充
+      load_script: enabled && !!client && (cfg.auto_ads !== false || hasSlot),
+      lazy: cfg.lazy !== false,
+      test: cfg.test === true,
+      format: String(cfg.format || 'auto'),
+      layout_key: String(cfg.layout_key || ''),
+      full_width_responsive: cfg.full_width_responsive !== false,
+      label: cfg.label === true,
+      label_text: this.__('common.ad'),
+      list_interval: Number(cfg.list_interval) > 0 ? Number(cfg.list_interval) : 0
+    };
+  });
+
+  /**
    * 多语言 / 中英切换。
    * 返回可用语言清单 + 各语言的全量扁平字典（前端做「当前文案 → 目标文案」反查替换）。
    */
