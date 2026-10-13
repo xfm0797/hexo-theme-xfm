@@ -43,10 +43,11 @@ XFM 是一套面向长期写作的 Hexo 主题：全套设计令牌驱动、深�
 | 代码块 | 语言标签、Mac 风格三色点、复制按钮、长代码折叠、gutter 行号、自研深浅色配色 |
 | 标签插件 | 提示块、折叠、选项卡、时间轴、栅格、按钮、徽标、图标、流程图、链接卡片 |
 | 内容增强 | 标题锚点、表格滚动容器、外链新窗、图片懒加载与灯箱、任务列表、数学公式、Mermaid |
+| 多语言 | 内置 zh-CN / en，界面文案抽离到 `languages/`；导航栏翻译图标一键前后端切换，选择本地记忆 |
+| 广告变现 | Google AdSense（自动广告 + 6 个手动广告位、延迟加载、广告标识、路径排除、单篇关闭、`data-adtest` 预览） |
 | 评论 | giscus / utterances / waline / twikoo / disqus / disqusjs / valine / 畅言 |
 | SEO | OG / Twitter Card、canonical、JSON-LD、内置 sitemap.xml 与 robots.txt、404 页 |
 | 阅读体验 | 阅读进度条、返回顶部、平滑滚动、滚动入场动画、文章过时提醒、版权卡、打赏、分享、相关文章 |
-| 国际化 | 内置 zh-CN / en，i18n 文案抽离到 `languages/` |
 | 交付质量 | 自适应三档（mobile / tablet / desktop，可配置）、触摸与刘海屏适配、打印样式、动效降级（`prefers-reduced-motion`）、语义化标签 |
 
 ---
@@ -272,6 +273,31 @@ navbar:
   sticky: true
   auto_hide: true
 
+lang_switcher:
+  enable: true         # 导航栏「翻译」图标；语言数 < 2 时自动不显示
+  style: auto          # auto（2 种点击切换、3 种以上弹菜单）/ toggle / menu
+  position: tools      # tools（右侧工具区）/ menu（排进主菜单末尾）
+  remember: true       # 选择写入 localStorage
+  languages:
+    - { code: zh-CN, name: 简体中文, short: 中 }
+    - { code: en,    name: English, short: EN }
+
+adsense:
+  enable: false                        # 总开关
+  client: ""                           # ca-pub-xxxxxxxxxxxxxxxx
+  auto_ads: true                       # 页面级自动广告（脚本带 client 参数）
+  lazy: true                           # 滚动到附近再填充
+  label: false                         # 广告位上方显示「广告」标识
+  list_interval: 4                     # 列表页每 4 篇插一个内嵌广告位，0 = 不插
+  exclude_pages: []                    # 如 ['/about/', '/privacy/']
+  slots:                               # 留空的位置不输出 DOM
+    post_top: "1111111111"
+    post_bottom: "2222222222"
+    page_top: "3333333333"
+    page_bottom: "4444444444"
+    list_inline: "5555555555"
+    sidebar: "6666666666"              # 需同时在 sidebar.widgets 里加 adsense
+
 index:
   layout: card        # card / list / grid / classic
   hero: true
@@ -330,7 +356,156 @@ hexo new page archives     # 无需额外 type
 
 ---
 
-## 六、标签插件
+## 六、Google AdSense 广告
+
+主题内置 AdSense 支持，**不写一行模板代码**，全部由 `adsense` 配置节驱动。关闭时既不加载脚本也不输出任何广告位 DOM。
+
+### 快速开始
+
+```yaml
+adsense:
+  enable: true
+  client: "ca-pub-1234567890123456"   # AdSense 后台 → 账号 → 账号信息里取
+  auto_ads: true                      # 页面级自动广告
+  lazy: true
+  label: true                         # 广告位上方显示「广告」二字
+  slots:
+    post_top: "1234567890"            # 每个位填 AdSense「广告单元」的 id
+    post_bottom: "1234567891"
+    list_inline: "1234567892"
+```
+
+`enable: true` + 填了 `client` 之后，`<head>` 会自动注入：
+
+```html
+<meta name="google-adsense-account" content="ca-pub-1234567890123456">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1234567890123456" crossorigin="anonymous"></script>
+```
+
+### 广告位一览
+
+| 配置键 | 位置 | 生效页面 |
+| --- | --- | --- |
+| `post_top` | 文章正文上方（标题 / 元信息之下） | 文章页 |
+| `post_bottom` | 文章正文下方（版权卡之上） | 文章页 |
+| `page_top` | 页面正文上方 | 独立页面（关于 / 友链 / 文档 / 笔记等） |
+| `page_bottom` | 页面正文下方 | 独立页面 |
+| `list_inline` | 列表内嵌，每 `list_interval` 篇插一个 | 首页 / 归档 / 分类 / 标签列表 |
+| `sidebar` | 侧边栏挂件位 | 仅 blog 模式，且需在 `sidebar.widgets` 里加 `adsense` |
+
+> **只有 blog 模式有挂件侧栏**。notes / docs 模式用的是左侧导航树（sidenav），不放挂件，因此 `sidebar` 广告位在这两种模式不输出——这不是 bug，是布局决定的。
+
+任意一个 `slots` 键留空（或整段不写）就不输出对应位置的 DOM，可以先只上 `post_top` 一个位试水。
+
+### 延迟加载
+
+`lazy: true`（默认）时广告单元只在滚动到视口附近（`rootMargin: 250px`）才 `push({})`，首屏更快、也避免用户在首屏看到空框。若站点首屏本就短、希望立刻填充，设为 `false`。
+
+每个广告单元只 push 一次（单元上会打 `data-xfm-ad-pushed="1"` 标记），重复 push 会被 AdSense 报错。
+
+### 合规与调试
+
+```yaml
+adsense:
+  label: true          # 广告位上方显示「广告」标识，合规建议开启
+  test: false          # 本地 / 预览环境设为 true，单元带 data-adtest="on"，只显示占位不产生真实展示
+  exclude_pages: ['/about/', '/privacy/']   # 路径命中即不显示广告（子串匹配）
+```
+
+`exclude_pages` 是**路径子串匹配**：`/privacy/` 会同时命中 `/privacy/` 和 `/privacy/children/`。脚本仍随 `<head>` 加载（脚本是页面级的，与单个页面是否出广告无关）。
+
+单篇文章还可就地关闭，不需要改配置：
+
+```yaml
+---
+title: 某篇不想挂广告的文章
+ads: false
+---
+```
+
+### 想验证有没有生效
+
+```bash
+hexo clean && hexo g && hexo s
+```
+
+打开页面按 F12，在 Elements 里搜 `adsbygoogle` 应能看到 `<ins class="adsbygoogle" data-ad-client="ca-pub-…" data-ad-slot="…">`；Console 里执行：
+
+```js
+document.querySelectorAll('.adsbygoogle').length      // 本页广告位数量
+document.querySelectorAll('[data-xfm-ad-pushed="1"]').length  // 已触发填充的数量
+window.XFM.ads                                         // 当前广告配置快照
+```
+
+广告本身是空白 / 显示「广告占位」属正常：审核通过前、`data-adtest="on"` 或无填充时都是这样。
+
+---
+
+## 七、多语言 / 中英切换
+
+导航栏右侧的「翻译」图标不是装饰，**点击即真的换掉整个界面的语言**。
+
+### 工作原理
+
+1. **构建期**：把 `languages/*.yml` 全部语言包拍平成点号路径（`common.home` → `首页 / Home`），内联进 `<head>` 的 `window.__XFM_LANG__`。
+2. **首屏前**：`lang-boot` 脚本在 `<head>` 中同步执行——先读 URL 的 `?__lang=`，再读本地记忆，决定用哪种语言，写好 `<html data-lang>` 与 `lang` 属性。这一步在渲染前完成，避免中英文案闪一下再切换。
+3. **渲染后**：`i18n.js` 遍历界面元素（导航 / 按钮 / 侧栏 / 分页 / 页脚 / 搜索框等白名单容器），按「当前文案 → 目标文案」映射替换文本与 `placeholder` / `title` / `aria-label` / `alt` 等属性。
+
+### 为什么正文不翻译
+
+只有界面容器参与替换，` .xfm-content` 正文区被排除在外。文章标题、正文是**写作语言**（你写好的是什么就是什么），不是界面语言——把中文文章标题机翻成英文只会更糟。切到 English 后导航变成 `Home / Archives / Categories`，而文章列表里的中文标题原样保留。
+
+### 配置
+
+```yaml
+lang_switcher:
+  enable: true         # 语言数少于 2 时自动隐藏
+  style: auto          # auto / toggle / menu
+  position: tools      # tools（导航栏右侧，与搜索 / RSS / 深浅色同列）/ menu（主菜单末尾）
+  remember: true       # 选择写入 localStorage，下次自动沿用
+  update_html_lang: true
+  languages:
+    - { code: zh-CN, name: 简体中文, short: 中 }
+    - { code: en,    name: English, short: EN }
+```
+
+| `style` | 行为 |
+| --- | --- |
+| `auto`（默认） | 2 种语言时按钮点击即切换；3 种及以上弹出菜单选择 |
+| `toggle` | 始终点击即切换，多于 2 种语言按 `languages` 清单顺序轮换 |
+| `menu` | 始终弹出菜单 |
+
+`position: tools` 时按钮显示为 `🌐 中` / `🌐 EN`（当前语言短标）；移动端抽屉里固定有一排语言 chips，不受 `position` 影响。
+
+### 用 URL 强制语言
+
+分享链接时可以锁定语言，优先级高于本地记忆：
+
+```
+https://example.com/2026/10/01/hello/?__lang=en
+```
+
+### 运行时 API
+
+```js
+window.XFM.lang.current      // 当前语言 code
+window.XFM.lang.languages    // 语言清单
+window.XFM.lang.set('en')    // 切换
+window.XFM.lang.toggle()     // 轮换到下一个
+window.XFM.lang.t('common.home')   // 取词条
+```
+
+### 增加一门语言
+
+1. 复制 `languages/en.yml` 为 `languages/<code>.yml`（如 `ja.yml`）并翻译；未翻译的键会自动回退到 `default.yml`。
+2. 在 `lang_switcher.languages` 里加一项：`{ code: ja, name: 日本語, short: 日 }`。
+3. 站点 `_config.yml` 的 `language` 决定**默认构建语言**，建议与 `languages` 首项一致。
+
+`%s` 占位符（如 `post.outdated`）与 `{count}` 占位符（如 `search.result_count`）在切换时会带上参数重新渲染，不是简单文本替换。
+
+---
+
+## 八、标签插件
 
 所有标签插件在 Markdown 正文中直接使用：
 
@@ -378,7 +553,7 @@ graph LR
 
 ---
 
-## 七、Front-matter 支持字段
+## 九、Front-matter 支持字段
 
 ```yaml
 ---
@@ -395,6 +570,7 @@ sticky: 100                   # 置顶权重，越大越靠前
 toc: false                    # 单篇关闭目录
 sidebar: false                # 单篇关闭侧边栏
 comments: false               # 单篇关闭评论
+ads: false                    # 单篇关闭广告（需主题 adsense.enable 为 true）
 mode: docs                    # 单篇指定模式
 cover_style: inline           # inline 时封面不作为 Hero
 order: 1                      # 笔记/文档模式排序权重
@@ -403,7 +579,7 @@ order: 1                      # 笔记/文档模式排序权重
 
 ---
 
-## 八、目录结构
+## 十、目录结构
 
 ```
 themes/xfm
@@ -414,22 +590,24 @@ themes/xfm
 │   ├── index / post / page / archive / category / tag / 404
 │   └── _partials/           # head / header / footer / sidebar / toc /
 │                            # search / comment / widgets / notes / docs…
+│                            # ads.ejs 广告位、lang-boot.ejs 语言启动、
+│                            # lang-switcher.ejs 语言控件
 │                            # adaptive-boot.ejs 定档、adaptive-style.ejs 按配置生成档位样式
 ├── preview/                 # README 用的模式预览图
 ├── scripts/
 │   ├── filters/content.js   # 代码块工具条、标题锚点、表格容器、外链、懒加载
 │   ├── generators/          # search.json、sitemap.xml、robots.txt、404
-│   ├── helpers/index.js     # 封面、摘要、字数、目录树、笔记/文档导航、计数
+│   ├── helpers/index.js     # 封面、摘要、字数、目录树、笔记/文档导航、计数、广告与语言
 │   └── tags/index.js        # 全部标签插件
 └── source/
     ├── css/                 # variables · base · layout · components · post · plugins · adaptive
-    ├── js/                  # adaptive · core · toc · search
+    ├── js/                  # adaptive · core · toc · search · i18n · ads
     └── images/              # avatar / favicon / 默认封面（SVG，零外链）
 ```
 
 ---
 
-## 九、自定义
+## 十一、自定义
 
 **覆盖样式**：在站点 `source/_data/styles.styl` 之外，推荐直接把自定义 CSS/JS 放进主题后，通过配置注入：
 
@@ -448,13 +626,13 @@ custom:
 
 ---
 
-## 十、浏览器支持
+## 十二、浏览器支持
 
 Chrome / Edge / Firefox / Safari 最近两个大版本。使用了 CSS 变量、`backdrop-filter`、`aspect-ratio`、`IntersectionObserver`；旧浏览器会优雅降级（失去磨砂与动画，不影响阅读）。
 
 ---
 
-## 十一、常见问题
+## 十三、常见问题
 
 ### 平台构建报 `ERR_REQUIRE_ESM`（strip-ansi）
 
@@ -484,8 +662,28 @@ Hexo 用 `deepMerge` 合并 `theme_config`，新增的键一律追加到末尾�
 
 已修复：右侧目录栏只在页面真有 h2–h4 标题时才渲染（也支持 front-matter 用 `toc: false` 单独关闭）。
 
+### AdSense 配好了却看不到广告
+
+按顺序排查：
+
+1. `adsense.enable` 是否为 `true`、`client` 是否填了 `ca-pub-` 开头的 ID；
+2. 对应位置的 `slots` 键是否填了广告单元 id——留空不输出 DOM；
+3. 页面是否被 `exclude_pages` 命中，或该篇 front-matter 写了 `ads: false`；
+4. `sidebar` 位需要同时把 `adsense` 加进 `sidebar.widgets`，且只在 blog 模式生效；
+5. 广告审核通过前、`data-adtest="on"` 或无填充时，`<ins>` 存在但内容为空，这是正常的。
+
+若 Element 里连 `<ins class="adsbygoogle">` 都没有，说明是配置问题（走 1–4）；有 `<ins>` 但空白，是 AdSense 侧填充问题。
+
+### 语言切换后文章正文没变
+
+这是有意为之。主题只替换界面文案（导航 / 按钮 / 侧栏 / 页脚 / 分页 / 搜索框等），正文与标题属于写作内容，不参与替换——详见[七、多语言 / 中英切换](#七多语言--中英切换)。若确实要给文章做多语言，需要站点层为每篇准备多语言版本并用 `permalink` / 路由区分。
+
+### 语言切换按钮不显示
+
+`lang_switcher.languages` 少于 2 项时按钮自动隐藏；另需确认 `lang_switcher.enable` 为 `true`（默认值）。`position: menu` 时按钮排在主菜单末尾，不在右侧工具区。
+
 ---
 
-## 十二、许可
+## 十四、许可
 
 MIT License。
