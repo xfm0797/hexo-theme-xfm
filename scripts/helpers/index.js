@@ -4,6 +4,9 @@
  * 提供给 EJS 模板使用的辅助函数集合。
  */
 
+const fs = require('fs');
+const path = require('path');
+
 const escapeHTML = (str) =>
   String(str == null ? '' : str).replace(/[&<>"']/g, (c) => ({
     '&': '&amp;',
@@ -198,6 +201,97 @@ function hasFeedGenerator(hexo) {
   } catch (e) {
     return true;
   }
+}
+
+/* ---------------------------------------------------------------------------
+ * 语言包（供「中英切换」使用）
+ * 直接把 languages/*.yml 读成扁平字典交给前端 —— 前端切换时用「当前文案 → 目标文案」
+ * 的反查替换，因此需要拿到全部语言包，而不能只拿当前语言的那一份。
+ * ------------------------------------------------------------------------- */
+const DEFAULT_LANGS = [
+  { code: 'zh-CN', name: '简体中文', short: '中' },
+  { code: 'en', name: 'English', short: 'EN' }
+];
+const LANG_CACHE = {};
+
+/** 语言码归一：zh_CN / zh-cn / zh-Hans → zh-CN，en_US → en */
+function normLang(code) {
+  const c = String(code == null ? '' : code)
+    .trim()
+    .replace(/_/g, '-')
+    .toLowerCase();
+  if (!c) return '';
+  if (c === 'zh' || c === 'zh-cn' || c === 'zh-hans' || c === 'zh-hans-cn') return 'zh-CN';
+  if (c === 'en' || c === 'en-us' || c === 'en-gb') return 'en';
+  return c;
+}
+
+/** 嵌套对象 → 点号扁平字典（error.404_title 这种也照原样保留） */
+function flattenDict(src, prefix, out) {
+  const acc = out || {};
+  Object.keys(src || {}).forEach((k) => {
+    const v = src[k];
+    const key = prefix ? prefix + '.' + k : k;
+    if (v && typeof v === 'object' && !Array.isArray(v)) flattenDict(v, key, acc);
+    else if (v !== null && v !== undefined) acc[key] = String(v);
+  });
+  return acc;
+}
+
+/** 读取主题语言包：<code>.yml > default.yml > 空表 */
+function loadLangTable(hexo, code) {
+  const dir = hexo.theme_dir || (hexo.theme && hexo.theme.base);
+  if (!dir) return {};
+  const candidates = [];
+  const norm = normLang(code);
+  if (norm) candidates.push(norm + '.yml');
+  if (code) candidates.push(String(code) + '.yml');
+  candidates.push('default.yml');
+  for (const file of candidates) {
+    const full = path.join(dir, 'languages', file);
+    if (LANG_CACHE[full]) return LANG_CACHE[full];
+    try {
+      if (!fs.existsSync(full)) continue;
+      const text = fs.readFileSync(full, 'utf8');
+      const data = hexo.render.renderSync({ text: text, engine: 'yaml' });
+      const flat = flattenDict(data);
+      if (Object.keys(flat).length) {
+        LANG_CACHE[full] = flat;
+        return flat;
+      }
+    } catch (e) {
+      /* 读不到就换下一个候选 */
+    }
+  }
+  return {};
+}
+
+/** 解析 languages 配置：数组 [{code,name,short}] 或对象 { 'zh-CN': { name, short } } */
+function parseLangs(raw) {
+  if (!raw) return DEFAULT_LANGS.slice();
+  const list = [];
+  if (Array.isArray(raw)) {
+    raw.forEach((item) => {
+      if (!item) return;
+      if (typeof item === 'string') list.push({ code: item });
+      else if (item.code) list.push({ code: item.code, name: item.name, short: item.short });
+    });
+  } else if (typeof raw === 'object') {
+    Object.keys(raw).forEach((code) => {
+      const item = raw[code] || {};
+      list.push({ code: code, name: item.name, short: item.short });
+    });
+  }
+  const picked = list
+    .map((it) => {
+      const code = String(it.code || '').trim();
+      const name = String(it.name || code).trim();
+      let short = String(it.short || '').trim();
+      if (!short) short = /[\u4e00-\u9fff]/.test(name) ? name.slice(0, 1) : code.slice(0, 2).toUpperCase();
+      return { code: code, name: name, short: short };
+    })
+    .filter((it) => it.code);
+  return picked.length ? picked : DEFAULT_LANGS.slice();
 }
 
 module.exports = function (hexo) {
@@ -680,6 +774,36 @@ module.exports = function (hexo) {
     else if (setting === true || setting === 'true') enable = true;
     else enable = hasFeedGenerator(hexo);
     return { enable: enable, url: vendors.rss || '/atom.xml' };
+  });
+
+  /**
+   * 多语言 / 中英切换。
+   * 返回可用语言清单 + 各语言的全量扁平字典（前端做「当前文案 → 目标文案」反查替换）。
+   */
+  register('xfm_lang', function () {
+    const cfg = getConfig(hexo, 'lang_switcher', {}) || {};
+    const langs = parseLangs(cfg.languages);
+    const enable = cfg.enable !== false && langs.length > 1;
+    const siteLang = normLang(getConfig(hexo, 'language', ''));
+    let current = langs[0].code;
+    const hit = langs.filter((l) => normLang(l.code) === siteLang)[0];
+    if (hit) current = hit.code;
+    const tables = {};
+    if (enable) {
+      langs.forEach((l) => {
+        tables[l.code] = loadLangTable(hexo, l.code);
+      });
+    }
+    return {
+      enable: enable,
+      current: current,
+      languages: langs,
+      tables: tables,
+      style: cfg.style === 'menu' || cfg.style === 'toggle' ? cfg.style : 'auto',
+      position: cfg.position === 'menu' ? 'menu' : 'tools',
+      remember: cfg.remember !== false,
+      update_html_lang: cfg.update_html_lang !== false
+    };
   });
 
   /** 配置读取（模板里兜底用） */

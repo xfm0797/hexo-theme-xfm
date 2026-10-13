@@ -1,8 +1,18 @@
+<%
+  // 多语言：前端脚本需要的运行时开关
+  const __langCfg = xfm_lang();
+%>
 <script>
   window.XFM = {
     root: '<%= config.root || '/' %>',
     mode: '<%= (theme.mode || 'blog') %>',
-    lang: '<%= config.language || 'zh-CN' %>',
+    lang: '<%= __langCfg.current %>',
+    langSwitcher: {
+      enable: <%= __langCfg.enable ? 'true' : 'false' %>,
+      style: '<%= __langCfg.style %>',
+      remember: <%= __langCfg.remember ? 'true' : 'false' %>,
+      updateHtmlLang: <%= __langCfg.update_html_lang ? 'true' : 'false' %>
+    },
     scheme: '<%= (theme.appearance && theme.appearance.scheme) || 'auto' %>',
     search: {
       enable: <%= theme.search && theme.search.enable !== false ? 'true' : 'false' %>,
@@ -57,6 +67,9 @@
 </script>
 
 <script src="<%- url_for('/js/adaptive.js') %>"></script>
+<% if (__langCfg.enable) { %>
+<script src="<%- url_for('/js/i18n.js') %>"></script>
+<% } %>
 <script src="<%- url_for('/js/core.js') %>"></script>
 <script src="<%- url_for('/js/toc.js') %>"></script>
 <% if (theme.search && theme.search.enable !== false) { %>

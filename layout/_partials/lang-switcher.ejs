@@ -1,0 +1,50 @@
+<%
+  /*
+   * 语言切换控件
+   * 导航栏：图标 + 当前语言缩写，2 种语言点击即切，3 种以上弹出菜单
+   * 抽屉（variant: 'drawer'）：平铺语言按钮，移动端一眼可点
+   */
+  const LS = xfm_lang();
+  const variant = String((locals && locals.variant) || 'navbar');
+  // style: menu 始终弹菜单；auto 在 3 种语言以上弹菜单；toggle 一律点击即轮换
+  const useMenu = LS.enable && (LS.style === 'menu' || (LS.style === 'auto' && LS.languages.length > 2));
+  const current = LS.enable
+    ? (LS.languages.filter(function (l) { return l.code === LS.current; })[0] || LS.languages[0])
+    : null;
+%>
+<% if (LS.enable) { %>
+<% if (variant === 'drawer') { %>
+<div class="drawer-lang" data-lang-switch>
+  <div class="drawer-lang-head">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-translate"></use></svg>
+    <span><%= __('common.language') %></span>
+  </div>
+  <div class="lang-chips">
+    <% LS.languages.forEach(function (item) { %>
+    <button class="lang-chip<%= item.code === LS.current ? ' is-active' : '' %>" type="button" data-lang="<%= item.code %>" aria-pressed="<%= item.code === LS.current %>"><%= item.name %></button>
+    <% }); %>
+  </div>
+</div>
+<% } else { %>
+<div class="lang-switch" data-lang-switch>
+  <button class="icon-btn lang-btn" type="button" aria-expanded="false"
+          aria-haspopup="<%= useMenu ? 'true' : 'false' %>"
+          aria-label="<%= __('common.language') %>" title="<%= __('common.language') %>">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-translate"></use></svg>
+    <span class="lang-current" data-lang-current><%= current.short %></span>
+  </button>
+  <% if (useMenu) { %>
+  <div class="lang-menu" data-lang-menu role="menu">
+    <div class="lang-menu-head"><%= __('lang.menu_label') %></div>
+    <% LS.languages.forEach(function (item) { %>
+    <button class="lang-option<%= item.code === LS.current ? ' is-active' : '' %>" type="button"
+            role="menuitemradio" aria-checked="<%= item.code === LS.current %>" data-lang="<%= item.code %>">
+      <span class="lang-option-name"><%= item.name %></span>
+      <span class="lang-option-short"><%= item.short %></span>
+    </button>
+    <% }); %>
+  </div>
+  <% } %>
+</div>
+<% } %>
+<% } %>

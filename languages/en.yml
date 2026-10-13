@@ -26,6 +26,9 @@ common:
   link_copied: Link copied to clipboard
   sticky: Pinned
   featured: Featured
+  prev: Prev
+  next: Next
+  language: Language
 
 search:
   placeholder: Search posts, notes and docs…
@@ -124,6 +127,10 @@ error:
 
 widgets:
   recent_posts: Latest Posts
+
+lang:
+  switched: Switched to %s
+  menu_label: Choose language
 
 misc:
   table_wrap_hint: Scroll horizontally to see the full table

@@ -269,6 +269,143 @@
   border-bottom-width: 1px;
 }
 
+/* ---- 语言切换（导航栏工具区）---- */
+.lang-switch {
+  position: relative;
+}
+
+.lang-btn {
+  width: auto;
+  min-width: 38px;
+  padding: 0 9px;
+  gap: 6px;
+  grid-auto-flow: column;
+}
+
+.lang-btn .xfm-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.lang-current {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.lang-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  min-width: 170px;
+  padding: 6px;
+  border-radius: var(--xfm-radius);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity var(--t-fast) var(--ease), transform var(--t-fast) var(--ease),
+    visibility var(--t-fast);
+}
+
+.lang-menu.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.lang-menu-head {
+  padding: 4px 8px 8px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--c-text-faint);
+}
+
+.lang-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--xfm-radius-sm);
+  font-size: 13.5px;
+  color: var(--c-text-soft);
+  text-align: left;
+  transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+
+.lang-option:hover {
+  color: var(--c-text);
+  background: var(--c-surface-hover);
+}
+
+.lang-option.is-active {
+  color: var(--xfm-primary);
+  background: var(--c-primary-bg);
+  font-weight: 600;
+}
+
+.lang-option-short {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  opacity: 0.7;
+}
+
+/* 主菜单里的语言项（lang_switcher.position: menu） */
+.lang-menu-btn {
+  width: 100%;
+  text-align: left;
+}
+
+/* ---- 语言切换（移动端抽屉）---- */
+.drawer-lang {
+  margin-top: 14px;
+  padding: 14px 4px 2px;
+  border-top: 1px solid var(--c-border);
+}
+
+.drawer-lang-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+  color: var(--c-text-faint);
+}
+
+.lang-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lang-chip {
+  padding: 7px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  font-size: 13px;
+  color: var(--c-text-soft);
+  transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease);
+}
+
+.lang-chip:hover {
+  color: var(--xfm-primary);
+  border-color: var(--xfm-primary);
+}
+
+.lang-chip.is-active {
+  color: #fff;
+  background: var(--xfm-primary);
+  border-color: var(--xfm-primary);
+}
+
 /* 深浅色按钮：三态切换图标 */
 .scheme-toggle .xfm-icon {
   position: absolute;

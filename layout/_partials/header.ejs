@@ -3,6 +3,10 @@
   const navEnable = !(theme.navbar && theme.navbar.enable === false);
   const showTitle = !(theme.appearance && theme.appearance.site_title === false);
   const rss = xfm_rss();
+  // 语言切换：位置在导航栏工具区（tools）还是主菜单末尾（menu）
+  const LNAV = xfm_lang();
+  const langInTools = LNAV.enable && LNAV.position === 'tools';
+  const langInMenu = LNAV.enable && LNAV.position === 'menu';
 
   // 菜单顺序：theme.menu_order 列出的键按给定顺序靠前，未列出的保持配置里的相对顺序排在后面。
   // Hexo 用 deepMerge 合并 theme_config，站点新增的菜单键一律被追加到末尾，
@@ -105,6 +109,25 @@
           </a>
         </li>
         <% } %>
+
+        <% if (langInMenu) { %>
+        <li class="nav-item has-children">
+          <span class="nav-link nav-text">
+            <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-translate"></use></svg>
+            <span><%= __('common.language') %></span>
+            <svg class="xfm-icon nav-arrow" aria-hidden="true"><use xlink:href="#xfm-i-chevron-down"></use></svg>
+          </span>
+          <ul class="nav-submenu">
+            <% LNAV.languages.forEach(function (item) { %>
+            <li>
+              <button class="nav-sub-link lang-menu-btn<%= item.code === LNAV.current ? ' is-active' : '' %>" type="button" data-lang="<%= item.code %>">
+                <span><%= item.name %></span>
+              </button>
+            </li>
+            <% }); %>
+          </ul>
+        </li>
+        <% } %>
       </ul>
     </nav>
 
@@ -117,6 +140,8 @@
         <% } %>
       </button>
       <% } %>
+
+      <% if (langInTools) { %><%- partial('_partials/lang-switcher') %><% } %>
 
       <% if (rss.enable) { %>
       <a class="icon-btn" href="<%= url_for(rss.url) %>" aria-label="<%= __('common.rss') %>" title="<%= __('common.rss') %>">
@@ -168,6 +193,7 @@
     <% }); } %>
     <% }); %>
   </nav>
+  <%- partial('_partials/lang-switcher', { variant: 'drawer' }) %>
   <%- partial('_partials/social', { extraClass: 'drawer-social' }) %>
 </aside>
 <% } %>

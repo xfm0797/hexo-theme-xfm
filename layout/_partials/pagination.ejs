@@ -3,14 +3,14 @@
   <%# 始终输出 Prev / Next，不可用时用禁用占位保持各页结构一致 —— 
       否则第 1 页（无 Prev）与末页（无 Next）的页码会左右偏移。 %>
   <% if (page.prev) { %>
-  <a class="page-btn" href="<%= url_for(page.prev_link) %>" rel="prev" aria-label="prev">
+  <a class="page-btn" href="<%= url_for(page.prev_link) %>" rel="prev" aria-label="<%= __('common.prev') %>">
     <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-left"></use></svg>
-    <span class="page-btn-text">Prev</span>
+    <span class="page-btn-text"><%= __('common.prev') %></span>
   </a>
   <% } else { %>
   <span class="page-btn is-disabled" aria-disabled="true">
     <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-left"></use></svg>
-    <span class="page-btn-text">Prev</span>
+    <span class="page-btn-text"><%= __('common.prev') %></span>
   </span>
   <% } %>
 
@@ -27,13 +27,13 @@
   </div>
 
   <% if (page.next) { %>
-  <a class="page-btn" href="<%= url_for(page.next_link) %>" rel="next" aria-label="next">
-    <span class="page-btn-text">Next</span>
+  <a class="page-btn" href="<%= url_for(page.next_link) %>" rel="next" aria-label="<%= __('common.next') %>">
+    <span class="page-btn-text"><%= __('common.next') %></span>
     <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-right"></use></svg>
   </a>
   <% } else { %>
   <span class="page-btn is-disabled" aria-disabled="true">
-    <span class="page-btn-text">Next</span>
+    <span class="page-btn-text"><%= __('common.next') %></span>
     <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-right"></use></svg>
   </span>
   <% } %>

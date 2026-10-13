@@ -1,0 +1,49 @@
+<%
+  /*
+   * 多语言定档（首屏同步执行）
+   * 1) 把各语言的全量扁平字典交给前端（切换时做「当前文案 → 目标文案」反查替换）
+   * 2) 立刻按 localStorage 里记住的语言改写 <html lang> / data-lang，
+   *    这样前端脚本、无障碍与 SEO 读到的语言和最终渲染一致
+   * 放在 <head> 里，避免先渲染中文再整体替换造成的闪烁。
+   */
+  const L = xfm_lang();
+%>
+<% if (L.enable) { %>
+<script id="xfm-lang-boot">
+(function () {
+  var CFG = <%- JSON.stringify({
+    current: L.current,
+    remember: L.remember,
+    update_html_lang: L.update_html_lang,
+    languages: L.languages.map(function (l) { return { code: l.code, name: l.name, short: l.short }; }),
+    tables: L.tables
+  }) %>;
+  window.__XFM_LANG__ = CFG;
+  var R = document.documentElement;
+  R.setAttribute('data-lang', CFG.current);
+  R.setAttribute('data-lang-build', CFG.current);
+  if (CFG.update_html_lang) R.setAttribute('lang', CFG.current);
+
+  var codes = CFG.languages.map(function (l) { return l.code; });
+
+  // 1) URL 覆盖：?__lang=en —— 便于分享指定语言的链接与本地对照调试
+  var forced = null;
+  try {
+    var m = location.search.match(/[?&]__lang=([a-zA-Z-]+)/);
+    if (m && codes.indexOf(m[1]) > -1) forced = m[1];
+  } catch (e) {}
+
+  // 2) 记忆的语言
+  var saved = forced;
+  if (!saved && CFG.remember) {
+    try { saved = localStorage.getItem('xfm-lang'); } catch (e) {}
+  }
+  if (!saved || saved === CFG.current || codes.indexOf(saved) === -1) return;
+
+  R.setAttribute('data-lang', saved);
+  if (CFG.update_html_lang) R.setAttribute('lang', saved);
+  // 标记「构建语言 ≠ 显示语言」，i18n.js 据此在 DOM 就绪后整页替换
+  R.setAttribute('data-lang-pending', '1');
+})();
+</script>
+<% } %>
