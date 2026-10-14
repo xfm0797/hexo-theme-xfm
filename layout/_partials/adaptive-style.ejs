@@ -183,7 +183,7 @@
       out.push('}');
       out.push(p + '.site-nav.is-open { transform: translateX(0); }');
       out.push(p + '.site-nav .site-nav-inner { max-height: none; }');
-      out.push(p + '.nav-fab { display: inline-grid; }');
+      out.push(p + '.nav-fab { display: inline-flex; }');
       out.push(p + '.sidenav-mask { display: block; }');
       out.push(p + 'body.sidenav-open { overflow: hidden; }');
       out.push(p + 'body.sidenav-open .sidenav-mask { opacity: 1; pointer-events: auto; }');
@@ -255,6 +255,14 @@
     if (t.nav === 'drawer') {
       out.push(p + '.nav-menu { display: none; }');
       out.push(p + '.nav-toggle { display: inline-grid; }');
+      /* 抽屉档下主菜单让位给工具区，此档唯一可收缩项绝不能是菜单按钮：
+         .brand / .nav-tools 默认 flex: 0 0 auto，若按钮也默认可收缩
+         （flex: 0 1 auto），窄屏内容溢出时收缩量会 100% 落在按钮上 ——
+         宽度被压到 0，图标消失、点击落空。这里把收缩权交给品牌区，
+         配合 .brand-title 的省略号，溢出由站点标题吸收。
+         min-width 取 logo / 品牌标记的宽度（34px）：标题可以被截到 0，
+         但 logo 必须有落脚处，否则零宽盒子的内容会外溢叠到菜单按钮上。 */
+      out.push(p + '.brand { flex: 0 1 auto; min-width: 34px; }');
     } else {
       out.push(p + '.nav-menu { display: flex; }');
       out.push(p + '.nav-toggle { display: none; }');
@@ -271,6 +279,8 @@
     const detail = name === 'mobile'
       ? [
         '.search-trigger .kbd-hint { display: none; }',
+        '.header-inner { gap: 10px; }',
+        '.brand { gap: 9px; }',
         '.hero-title { font-size: 22px; }',
         '.post-title { font-size: 17.5px; }',
         '.hero-panel { padding: 24px 20px; }',

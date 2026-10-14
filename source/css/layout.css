@@ -62,11 +62,14 @@
 }
 
 /* ---- 品牌区 ---- */
+/* min-width: 0 是关键：抽屉档下品牌区要能收缩，把横向空间让给工具区，
+   否则溢出量只能由菜单按钮吸收（详见文件末尾 .nav-toggle 的注释）。 */
 .brand {
   display: flex;
   align-items: center;
   gap: 11px;
   flex: none;
+  min-width: 0;
   color: var(--c-text);
   font-weight: 700;
 }
@@ -77,6 +80,7 @@
   width: 34px;
   height: 34px;
   object-fit: contain;
+  flex: none;
 }
 
 .brand-mark {
@@ -84,6 +88,7 @@
   place-items: center;
   width: 34px;
   height: 34px;
+  flex: none;
   border-radius: 11px;
   font-size: 17px;
   font-weight: 800;
@@ -96,12 +101,18 @@
 .brand-text {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   line-height: 1.15;
 }
 
+/* 标题与副标题都做单行省略：品牌区被压缩时用「…」截断，
+   而不是把导航栏其余部分顶出视口。 */
 .brand-title {
   font-size: 16px;
   letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .brand-tagline {
@@ -109,6 +120,9 @@
   font-weight: 500;
   color: var(--c-text-muted);
   letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ---- 菜单 ---- */
@@ -430,8 +444,15 @@ html[data-scheme="dark"]:not([data-scheme-pref="auto"]) .scheme-icon-auto {
 /* --------------------------------------------------------------------------
    移动端抽屉
    -------------------------------------------------------------------------- */
+/* 抽屉开关是窄屏下唯一的导航入口，因此任何情况下都不允许被压缩：
+   .header-inner 是 flex 布局，.brand / .nav-tools 都不可收缩，
+   一旦抽屉按钮成了唯一可收缩项，内容溢出时收缩量会全部落在它身上 ——
+   38px 被压成 0，图标消失且点击落空（elementFromPoint 命中 .header-inner）。
+   正确的做法是按钮 flex: 0 0 auto，溢出由品牌区吸收（见各抽屉档的
+   .brand { flex: 0 1 auto } + .brand-title 省略号）。 */
 .nav-toggle {
   display: none;
+  flex: none;
 }
 
 .drawer-mask {
