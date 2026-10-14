@@ -21,7 +21,7 @@
   </div>
   <div class="lang-chips">
     <% LS.languages.forEach(function (item) { %>
-    <button class="lang-chip<%= item.code === LS.current ? ' is-active' : '' %>" type="button" data-lang="<%= item.code %>" aria-pressed="<%= item.code === LS.current %>"><%= item.name %></button>
+    <button class="lang-chip<%= item.code === LS.current ? ' is-active' : '' %>" type="button" data-lang-option="<%= item.code %>" aria-pressed="<%= item.code === LS.current %>"><%= item.name %></button>
     <% }); %>
   </div>
 </div>
@@ -38,7 +38,7 @@
     <div class="lang-menu-head"><%= __('lang.menu_label') %></div>
     <% LS.languages.forEach(function (item) { %>
     <button class="lang-option<%= item.code === LS.current ? ' is-active' : '' %>" type="button"
-            role="menuitemradio" aria-checked="<%= item.code === LS.current %>" data-lang="<%= item.code %>">
+            role="menuitemradio" aria-checked="<%= item.code === LS.current %>" data-lang-option="<%= item.code %>">
       <span class="lang-option-name"><%= item.name %></span>
       <span class="lang-option-short"><%= item.short %></span>
     </button>

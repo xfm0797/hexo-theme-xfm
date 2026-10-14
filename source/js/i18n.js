@@ -176,8 +176,12 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-lang-current]'), function (el) {
       el.textContent = langItem(code).short;
     });
-    Array.prototype.forEach.call(document.querySelectorAll('[data-lang]'), function (btn) {
-      var on = btn.getAttribute('data-lang') === code;
+    // 注意：选项用的是 data-lang-option 而不是 data-lang。
+    // <html> 上也有 data-lang（当前语言状态），裸属性选择器会连带命中它，
+    // 在 click 委托里表现为 closest('[data-lang]') 一路爬到 <html>，
+    // 把页面所有 <a> 的默认导航都 preventDefault 掉。
+    Array.prototype.forEach.call(document.querySelectorAll('[data-lang-option]'), function (btn) {
+      var on = btn.getAttribute('data-lang-option') === code;
       btn.classList.toggle('is-active', on);
       if (btn.hasAttribute('aria-checked')) btn.setAttribute('aria-checked', on ? 'true' : 'false');
       if (btn.hasAttribute('aria-pressed')) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -237,15 +241,19 @@
     return next ? next.code : null;
   }
 
-  /* ---- 事件 ---- */
+  /* ---- 事件 ----
+   * 注意选择器用的是 data-lang-option 而非 data-lang：
+   * <html> 上挂着 data-lang（当前语言），若这里用 [data-lang]，
+   * closest() 对页面任意元素都会一路向上爬到 <html> 命中，
+   * 于是每次点击都走 preventDefault() —— 全站链接点不动。 */
   document.addEventListener('click', function (e) {
     var target = e.target;
     if (!target || !target.closest) return;
 
-    var langBtn = target.closest('[data-lang]');
+    var langBtn = target.closest('[data-lang-option]');
     if (langBtn) {
       e.preventDefault();
-      var code = langBtn.getAttribute('data-lang');
+      var code = langBtn.getAttribute('data-lang-option');
       closeMenus();
       if (code === currentLang()) return;
       setLang(code);

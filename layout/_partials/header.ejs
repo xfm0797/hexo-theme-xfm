@@ -120,7 +120,7 @@
           <ul class="nav-submenu">
             <% LNAV.languages.forEach(function (item) { %>
             <li>
-              <button class="nav-sub-link lang-menu-btn<%= item.code === LNAV.current ? ' is-active' : '' %>" type="button" data-lang="<%= item.code %>">
+              <button class="nav-sub-link lang-menu-btn<%= item.code === LNAV.current ? ' is-active' : '' %>" type="button" data-lang-option="<%= item.code %>">
                 <span><%= item.name %></span>
               </button>
             </li>
