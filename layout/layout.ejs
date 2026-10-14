@@ -86,21 +86,12 @@
 
   <% if (hasSideNav) { %>
   <div class="sidenav-mask" data-toggle="sidenav"></div>
-  <% const navFabLabel = currentMode === 'docs' ? __('docs.sidebar') : __('notes.sidebar'); %>
-  <button class="nav-fab" type="button" data-toggle="sidenav" aria-label="<%= navFabLabel %>" aria-controls="<%= currentMode === 'docs' ? 'docsNav' : 'notesNav' %>">
-    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-list"></use></svg>
-    <span class="nav-fab-text"><%= navFabLabel %></span>
-  </button>
   <% } %>
+
+  <%- partial('_partials/fab') %>
 
   <%- partial('_partials/footer') %>
   <%- partial('_partials/search') %>
-
-  <% if (theme.reading && theme.reading.back_to_top !== false) { %>
-  <button class="floating-btn back-to-top" type="button" data-back-to-top aria-label="<%= __('common.back_to_top') %>">
-    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-up"></use></svg>
-  </button>
-  <% } %>
 
   <div class="xfm-toast" id="xfmToast" role="status" aria-live="polite"></div>
   <div class="lightbox" id="lightbox" tabindex="-1" aria-label="image preview">

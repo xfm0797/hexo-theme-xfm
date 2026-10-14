@@ -1461,13 +1461,10 @@
    显示时机由 adaptive-style.ejs 按档位与侧栏形态注入，此处只定义外观
    -------------------------------------------------------------------------- */
 
-/* 侧栏唤起悬浮按钮（笔记 / 文档模式，窄屏可见） */
+/* 目录唤起按钮（笔记 / 文档模式，窄屏可见）
+   定位交给 .fab-stack 容器，此处只定义外观 */
 .nav-fab {
   display: none;
-  position: fixed;
-  right: 20px;
-  bottom: 76px;
-  z-index: var(--z-float);
   align-items: center;
   gap: 7px;
   padding: 0 16px;

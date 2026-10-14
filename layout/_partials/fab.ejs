@@ -1,0 +1,27 @@
+<%
+  /*
+   * 右下角悬浮按钮组
+   *   目录      —— 文档模式（可配置扩展到笔记模式）唤出 / 收起侧栏导航树
+   *   回到顶部  —— 滚动超过一屏后淡入
+   *
+   * 两个按钮统一放进 .fab-stack 里由容器定位，避免各自 fixed 定位后
+   * 新增按钮就得手改 bottom 偏移。按钮的档位可见性（窄屏才出现）
+   * 仍由 adaptive-style 生成的 .nav-fab / .floating-btn 规则决定。
+   */
+  const FB = xfm_floating();
+%>
+<% if (FB.enable && (FB.toc || FB.top)) { %>
+<div class="fab-stack" id="fabStack">
+  <% if (FB.toc) { %>
+  <button class="nav-fab" type="button" data-toggle="sidenav" aria-label="<%= FB.toc_label %>" aria-controls="<%= FB.toc_controls %>">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-list"></use></svg>
+    <span class="nav-fab-text"><%= FB.toc_label %></span>
+  </button>
+  <% } %>
+  <% if (FB.top) { %>
+  <button class="floating-btn back-to-top" type="button" data-back-to-top aria-label="<%= __('common.back_to_top') %>">
+    <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-arrow-up"></use></svg>
+  </button>
+  <% } %>
+</div>
+<% } %>

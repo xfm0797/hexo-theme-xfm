@@ -850,6 +850,33 @@ module.exports = function (hexo) {
     };
   });
 
+  /**
+   * 右下角悬浮按钮组（回到顶部 / 目录）。
+   * 只决定本次页面要不要输出按钮 DOM；按钮在各档位的可见性仍由
+   * adaptive-style 注入的 .nav-fab / .floating-btn 规则控制，
+   * 回到顶部的显隐由 core.js 按滚动位置切 .is-visible。
+   */
+  register('xfm_floating', function () {
+    const cfg = getConfig(hexo, 'floating', {}) || {};
+    const reading = getConfig(hexo, 'reading', {}) || {};
+    const enable = cfg.enable !== false;
+    const mode = String((this.page && this.page.mode) || getConfig(hexo, 'mode', 'blog'));
+    // toc_modes: 目录按钮在哪些模式出现。默认只 docs；
+    // 笔记模式如需保留侧栏入口，把它写成 [docs, notes] 即可。
+    let modes = toArray(cfg.toc_modes);
+    if (!modes.length) modes = ['docs'];
+    const tocHere = modes.indexOf(mode) > -1;
+    // 回到顶部：floating 与 reading 任一处显式关闭都不显示
+    const top = cfg.back_to_top !== false && reading.back_to_top !== false;
+    return {
+      enable: enable,
+      toc: enable && cfg.toc !== false && tocHere,
+      toc_label: this.__(mode === 'notes' ? 'notes.sidebar' : 'docs.sidebar'),
+      toc_controls: mode === 'notes' ? 'notesNav' : 'docsNav',
+      top: enable && top
+    };
+  });
+
   /** 配置读取（模板里兜底用） */
   register('xfm_config', function (path, dft) {
     return getConfig(hexo, path, dft);
