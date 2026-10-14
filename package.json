@@ -1,6 +1,6 @@
 {
   "name": "hexo-theme-xfm",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "title": "XFM",
   "description": "高端大气的 Hexo 主题，内置博客 / 笔记 / 文档三种模式，零第三方依赖，全站配置化。",
   "keywords": [
@@ -17,6 +17,7 @@
     "adsense",
     "i18n",
     "multi-language",
+    "back-to-top",
     "xfm"
   ],
   "homepage": "https://github.com/xfm0797/hexo-theme-xfm#readme",
