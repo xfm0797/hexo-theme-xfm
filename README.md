@@ -47,7 +47,8 @@ XFM 是一套面向长期写作的 Hexo 主题：全套设计令牌驱动、深�
 | 广告变现 | Google AdSense（自动广告 + 6 个手动广告位、延迟加载、广告标识、路径排除、单篇关闭、`data-adtest` 预览） |
 | 评论 | giscus / utterances / waline / twikoo / disqus / disqusjs / valine / 畅言 |
 | SEO | OG / Twitter Card、canonical、JSON-LD、内置 sitemap.xml 与 robots.txt、404 页 |
-| 阅读体验 | 阅读进度条、返回顶部、平滑滚动、滚动入场动画、文章过时提醒、版权卡、打赏、分享、相关文章 |
+| 阅读体验 | 阅读进度条、平滑滚动、滚动入场动画、文章过时提醒、版权卡、打赏、分享、相关文章 |
+| 悬浮按钮 | 右下角按钮组：文档目录（按模式显示，其余模式不渲染）+ 回到顶部（滚动淡入），窄屏出现、桌面隐藏 |
 | 交付质量 | 自适应三档（mobile / tablet / desktop，可配置）、触摸与刘海屏适配、打印样式、动效降级（`prefers-reduced-motion`）、语义化标签 |
 
 ---
@@ -272,6 +273,12 @@ appearance:
 navbar:
   sticky: true
   auto_hide: true
+
+floating:
+  enable: true         # 右下角悬浮按钮组总开关
+  toc: true            # 目录按钮：唤出 / 收起侧栏导航树
+  toc_modes: [docs]    # 目录按钮出现在哪些模式；写 [docs, notes] 让笔记模式也有入口
+  back_to_top: true    # 回到顶部（与 reading.back_to_top 任一为 false 即隐藏）
 
 lang_switcher:
   enable: true         # 导航栏「翻译」图标；语言数 < 2 时自动不显示
@@ -505,7 +512,45 @@ window.XFM.lang.t('common.home')   // 取词条
 
 ---
 
-## 八、标签插件
+## 八、右下角悬浮按钮组
+
+窄屏下侧栏收起为抽屉，需要有入口唤出；长文章看完也需要一键回顶。两者合并为固定右下角的按钮组，由 `floating` 一节统一控制。
+
+| 按钮 | 出现条件 | 行为 |
+| --- | --- | --- |
+| 文档目录 | 当前模式在 `floating.toc_modes` 里，且该档位侧栏为抽屉（`sidebar: offcanvas`） | 唤出 / 收起侧栏导航树 |
+| 回到顶部 | `floating.back_to_top` 与 `reading.back_to_top` 同时为 true | 滚动超过 320px 淡入，点击回顶 |
+
+按钮的档位可见性仍由自适应档位决定：桌面档侧栏常驻，目录按钮隐藏；只有侧栏收成抽屉的档位才出现。
+
+### 只在文档模式显示
+
+`floating.toc_modes` 默认 `[docs]`，即目录按钮只在文档模式出现，blog / notes 模式连 DOM 都不渲染。
+
+如果站点使用笔记模式，窄屏下侧栏同样是抽屉，没有这个按钮就打不开笔记树 —— 此时把它改成 `[docs, notes]`（按钮文案会自动跟随模式变成「笔记目录」）：
+
+```yaml
+floating:
+  toc_modes: [docs, notes]
+```
+
+### 与侧栏抽屉互斥
+
+侧栏打开时遮罩会盖在按钮组之上，因此整组会淡出，避免出现「看得见却点不着」的按钮。收起侧栏有三种方式：点遮罩、点目录按钮、按 `Esc`。
+
+### 关掉
+
+```yaml
+floating:
+  enable: false        # 整组不渲染
+  toc: false           # 只关目录按钮
+```
+
+只想去掉回到顶部而不动目录按钮，用 `reading.back_to_top: false` 即可 —— 两个开关任一为 false 都不显示。
+
+---
+
+## 九、标签插件
 
 所有标签插件在 Markdown 正文中直接使用：
 
@@ -553,7 +598,7 @@ graph LR
 
 ---
 
-## 九、Front-matter 支持字段
+## 十、Front-matter 支持字段
 
 ```yaml
 ---
@@ -579,7 +624,7 @@ order: 1                      # 笔记/文档模式排序权重
 
 ---
 
-## 十、目录结构
+## 十一、目录结构
 
 ```
 themes/xfm
@@ -590,8 +635,8 @@ themes/xfm
 │   ├── index / post / page / archive / category / tag / 404
 │   └── _partials/           # head / header / footer / sidebar / toc /
 │                            # search / comment / widgets / notes / docs…
-│                            # ads.ejs 广告位、lang-boot.ejs 语言启动、
-│                            # lang-switcher.ejs 语言控件
+│                            # ads.ejs 广告位、fab.ejs 右下角悬浮按钮组、
+│                            # lang-boot.ejs 语言启动、lang-switcher.ejs 语言控件
 │                            # adaptive-boot.ejs 定档、adaptive-style.ejs 按配置生成档位样式
 ├── preview/                 # README 用的模式预览图
 ├── scripts/
@@ -607,7 +652,7 @@ themes/xfm
 
 ---
 
-## 十一、自定义
+## 十二、自定义
 
 **覆盖样式**：在站点 `source/_data/styles.styl` 之外，推荐直接把自定义 CSS/JS 放进主题后，通过配置注入：
 
@@ -626,13 +671,13 @@ custom:
 
 ---
 
-## 十二、浏览器支持
+## 十三、浏览器支持
 
 Chrome / Edge / Firefox / Safari 最近两个大版本。使用了 CSS 变量、`backdrop-filter`、`aspect-ratio`、`IntersectionObserver`；旧浏览器会优雅降级（失去磨砂与动画，不影响阅读）。
 
 ---
 
-## 十三、常见问题
+## 十四、常见问题
 
 ### 平台构建报 `ERR_REQUIRE_ESM`（strip-ansi）
 
@@ -682,8 +727,22 @@ Hexo 用 `deepMerge` 合并 `theme_config`，新增的键一律追加到末尾�
 
 `lang_switcher.languages` 少于 2 项时按钮自动隐藏；另需确认 `lang_switcher.enable` 为 `true`（默认值）。`position: menu` 时按钮排在主菜单末尾，不在右侧工具区。
 
+### 手机端抽屉展开后点链接没反应
+
+v1.3.0 已修复。根因是语言选项按钮的属性名与 `<html data-lang>` 撞名：`i18n.js` 用 `target.closest('[data-lang]')` 判断语言选项，而 `closest()` 会沿祖先链一路爬到 `<html>` 命中，于是任意一次点击都走进 `preventDefault()` 分支，所有 `<a>` 的默认导航被吃掉。点按钮、点遮罩这类走 JS 处理的操作不受影响，所以只有链接看起来「坏」了。升级到 v1.3.0 即可，无需站点侧改动。
+
+### 右下角没有目录按钮
+
+依次确认：
+
+1. `floating.enable` 与 `floating.toc` 是否为 `true`；
+2. 当前模式是否在 `floating.toc_modes` 里——默认 `[docs]`，blog / notes 不显示；
+3. 是否处于桌面档——侧栏常驻的档位会隐藏目录按钮，只有侧栏收成抽屉的档位才出现。
+
+笔记模式窄屏下侧栏同样是抽屉，若需要一个入口，把 `toc_modes` 写成 `[docs, notes]`。
+
 ---
 
-## 十四、许可
+## 十五、许可
 
 MIT License。
