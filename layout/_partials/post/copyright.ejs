@@ -10,7 +10,11 @@
     </div>
   </div>
   <p class="copyright-text">
-    <%= licenseText.replace('{link}', '<a href="' + pageUrl + '">' + (page.title || config.title) + '</a>') %>
+    <%# copyright_text 支持 {link} 占位符，替换结果是 a 标签；
+        这里必须用「原样输出」标签（百分号紧跟等号再跟短横线的那种），
+        转义输出会把链接变成页面上可见的字面代码。
+        注意：本注释里不要出现任何 EJS 起始标记，否则注释会被提前截断。 %>
+    <%- licenseText.replace('{link}', '<a href="' + pageUrl + '">' + (page.title || config.title) + '</a>') %>
   </p>
   <div class="copyright-meta">
     <span><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-link"></use></svg><a href="<%= pageUrl %>"><%= pageUrl %></a></span>
