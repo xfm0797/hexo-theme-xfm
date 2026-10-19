@@ -18,6 +18,7 @@ common:
   no_more: No more posts
   read_more: Read more
   collapse: Collapse
+  submenu: Submenu
   expand: Expand
   copy: Copy
   copied: Copied

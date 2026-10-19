@@ -171,6 +171,17 @@
   cursor: default;
 }
 
+/* 有下级的顶级项：右侧留出箭头按钮的位置。
+   箭头是独立按钮（而不是塞在 <a> 里），这样「跳转」和「展开」是两个
+   互不干扰的动作，键盘也能分别到达。 */
+.nav-item.has-children > .nav-link:not(.nav-parent) {
+  padding-right: 30px;
+}
+
+.nav-parent {
+  cursor: pointer;
+}
+
 .nav-arrow {
   width: 13px;
   height: 13px;
@@ -178,12 +189,67 @@
   transition: transform var(--t-base) var(--ease);
 }
 
+.nav-arrow-right {
+  margin-left: auto;
+  transform: none;
+}
+
+.nav-caret {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 38px;
+  padding: 0;
+  border-radius: 0 var(--xfm-radius-sm) var(--xfm-radius-sm) 0;
+  color: var(--c-text-soft);
+  background: transparent;
+  opacity: 0.65;
+  transition: opacity var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+}
+
+.nav-caret:hover,
+.nav-caret:focus-visible {
+  opacity: 1;
+  background: var(--c-surface-hover);
+}
+
+.nav-item.is-open > .nav-caret {
+  opacity: 1;
+}
+
+.nav-item.is-open > .nav-caret .nav-arrow {
+  transform: rotate(180deg);
+}
+
+/* 二级及以下：箭头变成「向右」，展开时不做旋转（飞出方向由 .is-flip 决定） */
+.nav-submenu .nav-caret {
+  top: 50%;
+  right: 2px;
+  width: 24px;
+  height: 28px;
+  border-radius: var(--xfm-radius-sm);
+  transform: translateY(-50%);
+}
+
+.nav-item.is-open > .nav-caret.is-nested .nav-arrow {
+  transform: none;
+}
+
+/* 后代命中当前页时给父级一点提示，避免「当前页在第三级、一级菜单毫无反应」 */
+.nav-item.is-trail > .nav-link:not(.is-active) {
+  color: var(--c-text);
+}
+
 .nav-submenu {
   position: absolute;
   top: calc(100% + 8px);
   left: 50%;
   z-index: 10;
-  min-width: 168px;
+  min-width: var(--nav-submenu-w, 190px);
   padding: 6px;
   background: var(--c-elevated);
   border: 1px solid var(--c-border);
@@ -193,18 +259,53 @@
   visibility: hidden;
   transform: translate3d(-50%, -6px, 0) scale(0.98);
   transform-origin: top center;
+  /* visibility 是离散属性，若跟着 var(--t-base) 一起过渡，展开时会停在
+     hidden 直到动画过半 —— 此时 focus() 会被拒绝，键盘用户按 ArrowDown
+     根本进不去子菜单。正确做法：打开瞬间立即可见，关闭时延迟到淡出结束。 */
   transition: opacity var(--t-base) var(--ease), transform var(--t-base) var(--ease),
-    visibility var(--t-base);
+    visibility 0s linear var(--t-base);
 }
 
-.nav-item:hover > .nav-submenu {
+/* 展开态只认 .is-open：悬停 / 点击 / 键盘都由 nav.js 统一落这个类，
+   CSS 里不再出现 :hover，避免「鼠标还在项上、类已移除」时关不掉。 */
+.nav-item.is-open > .nav-submenu {
   opacity: 1;
   visibility: visible;
   transform: translate3d(-50%, 0, 0) scale(1);
+  transition-delay: 0s;
 }
 
-.nav-item:hover .nav-arrow {
-  transform: rotate(180deg);
+/* 贴边时改用左 / 右对齐，避免下拉被视口裁掉 */
+.nav-item.is-open > .nav-submenu.is-align-start {
+  left: 0;
+  transform: translate3d(0, 0, 0) scale(1);
+  transform-origin: top left;
+}
+
+.nav-item.is-open > .nav-submenu.is-align-end {
+  left: auto;
+  right: 0;
+  transform: translate3d(0, 0, 0) scale(1);
+  transform-origin: top right;
+}
+
+/* 三级及以下：从父项右侧飞出，贴右边时翻到左侧 */
+.nav-submenu .nav-submenu {
+  top: -6px;
+  left: calc(100% + 6px);
+  min-width: var(--nav-submenu-w, 190px);
+  transform: translate3d(-6px, 0, 0) scale(0.98);
+  transform-origin: left top;
+}
+
+.nav-submenu .nav-item.is-open > .nav-submenu {
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.nav-submenu .nav-item.is-open > .nav-submenu.is-flip {
+  left: auto;
+  right: calc(100% + 6px);
+  transform-origin: right top;
 }
 
 .nav-sub-link {
@@ -216,6 +317,10 @@
   font-size: 13.5px;
   color: var(--c-text-soft);
   white-space: nowrap;
+}
+
+.nav-submenu .nav-item.has-children > .nav-sub-link:not(.nav-parent) {
+  padding-right: 26px;
 }
 
 .nav-sub-link:hover {
@@ -557,6 +662,74 @@ html[data-scheme="dark"]:not([data-scheme-pref="auto"]) .scheme-icon-auto {
 .drawer-sub {
   padding-left: 34px;
   font-size: 13.5px;
+  color: var(--c-text-muted);
+}
+
+/* ---- 抽屉里的多级分组 ---- */
+.drawer-group {
+  display: block;
+}
+
+.drawer-group-head {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.drawer-group-head > .drawer-link,
+.drawer-group-head > .nav-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.drawer-group-toggle {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--xfm-radius-sm);
+  color: var(--c-text-muted);
+  background: transparent;
+  transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+}
+
+.drawer-group-toggle:hover {
+  color: var(--xfm-primary);
+  background: var(--c-primary-bg);
+}
+
+.drawer-group.is-open > .drawer-group-head .nav-arrow {
+  transform: rotate(180deg);
+}
+
+.drawer-subnav {
+  margin-left: 13px;
+  padding-left: 8px;
+  border-left: 1px solid var(--c-border);
+}
+
+.drawer-subnav[hidden] {
+  display: none;
+}
+
+/* 层级缩进：2 / 3 / 4 级各自固定步进，父级展开后层级关系仍然一眼可读 */
+.drawer-link[data-depth="2"] {
+  padding-left: 26px;
+  font-size: 13.5px;
+  color: var(--c-text-muted);
+}
+
+.drawer-link[data-depth="3"] {
+  padding-left: 40px;
+  font-size: 13.5px;
+  color: var(--c-text-muted);
+}
+
+.drawer-link[data-depth="4"] {
+  padding-left: 54px;
+  font-size: 13px;
   color: var(--c-text-muted);
 }
 

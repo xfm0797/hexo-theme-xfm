@@ -1,5 +1,4 @@
 <%
-  const menu = theme.menu || {};
   const navEnable = !(theme.navbar && theme.navbar.enable === false);
   const showTitle = !(theme.appearance && theme.appearance.site_title === false);
   const rss = xfm_rss();
@@ -7,37 +6,8 @@
   const LNAV = xfm_lang();
   const langInTools = LNAV.enable && LNAV.position === 'tools';
   const langInMenu = LNAV.enable && LNAV.position === 'menu';
-
-  // 菜单顺序：theme.menu_order 列出的键按给定顺序靠前，未列出的保持配置里的相对顺序排在后面。
-  // Hexo 用 deepMerge 合并 theme_config，站点新增的菜单键一律被追加到末尾，
-  // 想把「文档 / 笔记」插到「更多」之前，就在这里显式声明顺序。
-  const menuKeys = (function () {
-    const keys = Object.keys(menu);
-    const order = Array.isArray(theme.menu_order) ? theme.menu_order : [];
-    if (!order.length) return keys;
-    const rank = function (k) {
-      const i = order.indexOf(k);
-      return i === -1 ? order.length : i;
-    };
-    return keys
-      .map(function (k, i) { return { k: k, i: i }; })
-      .sort(function (a, b) { return rank(a.k) - rank(b.k) || a.i - b.i; })
-      .map(function (x) { return x.k; });
-  })();
-
-  // 菜单里是否已经有指向归档的项，避免笔记模式重复追加
-  const norm = function (p) { return String(p || '').replace(/\/+$/, '') || '/'; };
-  const menuHasArchive = menuKeys.some(function (k) {
-    const it = menu[k] || {};
-    if (it.path && norm(it.path) === '/archives') return true;
-    if (it.children) {
-      return Object.keys(it.children).some(function (sk) {
-        const sub = it.children[sk] || {};
-        return sub.path && norm(sub.path) === '/archives';
-      });
-    }
-    return false;
-  });
+  // 多级导航的运行时配置：层级上限、展开方式、收起延迟、子菜单宽度
+  const NAV = xfm_nav_config();
 %>
 <% if (navEnable) { %>
 <header class="site-header<%= (theme.appearance && theme.appearance.glass_navbar) ? ' is-glass' : '' %>" id="siteHeader">
@@ -60,49 +30,14 @@
       <% } %>
     </a>
 
-    <nav class="nav-menu" id="navMenu">
+    <nav class="nav-menu" id="navMenu"
+         data-nav-trigger="<%= NAV.trigger %>"
+         data-nav-delay="<%= NAV.hover_delay %>"
+         style="--nav-submenu-w: <%= NAV.submenu_width %>px">
       <ul class="nav-list">
-        <% menuKeys.forEach(function (key) {
-             const item = menu[key] || {};
-             const hasChildren = item.children && Object.keys(item.children).length;
-        %>
-        <li class="nav-item<%= hasChildren ? ' has-children' : '' %>">
-          <% if (item.path) { %>
-          <a class="nav-link <%= xfm_active(item.path) %>" href="<%= url_for(item.path) %>"<%= item.external ? ' target="_blank" rel="noopener noreferrer"' : '' %>>
-            <% if (item.icon) { %>
-            <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-<%= item.icon %>"></use></svg>
-            <% } %>
-            <span><%= key %></span>
-          </a>
-          <% } else { %>
-          <span class="nav-link nav-text">
-            <% if (item.icon) { %>
-            <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-<%= item.icon %>"></use></svg>
-            <% } %>
-            <span><%= key %></span>
-            <svg class="xfm-icon nav-arrow" aria-hidden="true"><use xlink:href="#xfm-i-chevron-down"></use></svg>
-          </span>
-          <% } %>
-          <% if (hasChildren) { %>
-          <ul class="nav-submenu">
-            <% Object.keys(item.children).forEach(function (subKey) {
-                 const sub = item.children[subKey] || {};
-            %>
-            <li>
-              <a class="nav-sub-link <%= xfm_active(sub.path) %>" href="<%= url_for(sub.path) %>"<%= sub.external ? ' target="_blank" rel="noopener noreferrer"' : '' %>>
-                <% if (sub.icon) { %>
-                <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-<%= sub.icon %>"></use></svg>
-                <% } %>
-                <span><%= subKey %></span>
-              </a>
-            </li>
-            <% }); %>
-          </ul>
-          <% } %>
-        </li>
-        <% }); %>
+        <%- xfm_nav_menu() %>
 
-        <% if (theme.mode === 'notes' && !menuHasArchive) { %>
+        <% if (theme.mode === 'notes' && !xfm_nav_has('/archives')) { %>
         <li class="nav-item">
           <a class="nav-link" href="<%= url_for('/archives/') %>">
             <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-archive"></use></svg><span><%= __('common.archives') %></span>
@@ -112,11 +47,11 @@
 
         <% if (langInMenu) { %>
         <li class="nav-item has-children">
-          <span class="nav-link nav-text">
+          <button class="nav-link nav-text nav-parent" type="button" aria-haspopup="true" aria-expanded="false">
             <svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-translate"></use></svg>
             <span><%= __('common.language') %></span>
             <svg class="xfm-icon nav-arrow" aria-hidden="true"><use xlink:href="#xfm-i-chevron-down"></use></svg>
-          </span>
+          </button>
           <ul class="nav-submenu">
             <% LNAV.languages.forEach(function (item) { %>
             <li>
@@ -175,23 +110,7 @@
     </button>
   </div>
   <nav class="drawer-nav">
-    <% menuKeys.forEach(function (key) {
-         const item = menu[key] || {};
-    %>
-    <% if (item.path) { %>
-    <a class="drawer-link <%= xfm_active(item.path) %>" href="<%= url_for(item.path) %>">
-      <% if (item.icon) { %><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-<%= item.icon %>"></use></svg><% } %>
-      <span><%= key %></span>
-    </a>
-    <% } %>
-    <% if (item.children) { Object.keys(item.children).forEach(function (subKey) {
-         const sub = item.children[subKey] || {}; %>
-    <a class="drawer-link drawer-sub <%= xfm_active(sub.path) %>" href="<%= url_for(sub.path) %>">
-      <% if (sub.icon) { %><svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-<%= sub.icon %>"></use></svg><% } %>
-      <span><%= subKey %></span>
-    </a>
-    <% }); } %>
-    <% }); %>
+    <%- xfm_nav_drawer() %>
   </nav>
   <%- partial('_partials/lang-switcher', { variant: 'drawer' }) %>
   <%- partial('_partials/social', { extraClass: 'drawer-social' }) %>

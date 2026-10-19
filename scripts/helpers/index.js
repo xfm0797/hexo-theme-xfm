@@ -550,6 +550,224 @@ module.exports = function (hexo) {
     return '';
   });
 
+  /* ------------------------------------------------------------------ *
+   * 多级导航菜单
+   * ------------------------------------------------------------------ *
+   * 菜单配置本身是一棵树（每级都可以用 children 往下挂），
+   * 这里只做三件事：
+   *   1. 按 menu_order 排序、按 nav.depth 截断，产出统一的树；
+   *   2. 给每个节点算好 href / 选中态 / 「后代命中」的 trail 态；
+   *   3. 分别渲染桌面下拉（xfm_nav_menu）与窄屏抽屉（xfm_nav_drawer）。
+   * 渲染放在 helper 而不是模板里递归，是因为 EJS 里嵌套 children 只能靠
+   * 定深循环或者拼字符串；菜单层级一旦可配，两种写法都会失控。
+   */
+  const NAV_DEFAULTS = {
+    depth: 3,
+    trigger: 'hover',
+    hover_delay: 120,
+    submenu_width: 190,
+    drawer_accordion: true
+  };
+
+  const navOptions = () => {
+    const cfg = getConfig(hexo, 'nav', {}) || {};
+    const num = (value, fallback, min, max) => {
+      const n = Number(value);
+      if (!isFinite(n)) return fallback;
+      return Math.min(max, Math.max(min, Math.round(n)));
+    };
+    return {
+      depth: num(cfg.depth, NAV_DEFAULTS.depth, 1, 4),
+      trigger: cfg.trigger === 'click' ? 'click' : 'hover',
+      hover_delay: num(cfg.hover_delay, NAV_DEFAULTS.hover_delay, 0, 1500),
+      submenu_width: num(cfg.submenu_width, NAV_DEFAULTS.submenu_width, 140, 420),
+      drawer_accordion: cfg.drawer_accordion !== false
+    };
+  };
+
+  const navIsActive = (ctx, path) => {
+    if (!path) return false;
+    const current = String((ctx.page && ctx.page.path) || '');
+    const normalized = normalizePath(path);
+    if (normalized === '/') {
+      return current === 'index.html' || current === '' || current.indexOf('/page/') === 0;
+    }
+    return current.indexOf(String(path).replace(/^\//, '')) === 0;
+  };
+
+  const navTree = (ctx, options) => {
+    const themeCfg = (hexo.theme && hexo.theme.config) || {};
+    const menu = themeCfg.menu || {};
+    const order = Array.isArray(themeCfg.menu_order) ? themeCfg.menu_order : [];
+    // menu_order 只影响排序，不改变未列出键之间的相对顺序
+    const rank = (key) => {
+      const i = order.indexOf(key);
+      return i === -1 ? order.length : i;
+    };
+    const ordered = Object.keys(menu)
+      .map((key, index) => ({ key, index }))
+      .sort((a, b) => rank(a.key) - rank(b.key) || a.index - b.index)
+      .map((entry) => entry.key);
+
+    const build = (label, raw, level) => {
+      const cfg = raw || {};
+      const childKeys = cfg.children && typeof cfg.children === 'object' ? Object.keys(cfg.children) : [];
+      // 超过 nav.depth 的层级不渲染：父项退化成普通链接，不再带箭头
+      const children = level < options.depth
+        ? childKeys.map((key) => build(key, cfg.children[key], level + 1))
+        : [];
+      const path = cfg.path ? String(cfg.path) : '';
+      const active = navIsActive(ctx, path);
+      return {
+        label: String(label),
+        path,
+        href: path ? ctx.url_for(path) : '',
+        icon: cfg.icon ? String(cfg.icon) : '',
+        external: cfg.external === true,
+        level,
+        active,
+        trail: active,
+        children,
+        hasChildren: children.length > 0,
+        // 有 children 但被 depth 截断：用于文档提示，不影响渲染
+        truncated: childKeys.length > 0 && children.length === 0
+      };
+    };
+
+    const items = ordered.map((key) => build(key, menu[key], 1));
+    // 后代命中时，父级也保持一点存在感，避免「当前页在第三级、一级菜单毫无提示」
+    const markTrail = (list) => {
+      list.forEach((item) => {
+        if (!item.children.length) return;
+        markTrail(item.children);
+        if (item.children.some((child) => child.trail)) item.trail = true;
+      });
+    };
+    markTrail(items);
+    return items;
+  };
+
+  const navIconHtml = (name) => (name
+    ? '<svg class="xfm-icon" aria-hidden="true"><use xlink:href="#xfm-i-' + escapeHTML(name) + '"></use></svg>'
+    : '');
+
+  const navTarget = (item) => (item.external ? ' target="_blank" rel="noopener noreferrer"' : '');
+
+  const navCaretHtml = (ctx, nested) => (
+    '<button class="nav-caret' + (nested ? ' is-nested' : '') + '" type="button" aria-haspopup="true" aria-expanded="false"' +
+    ' aria-label="' + escapeHTML(ctx.__('common.submenu')) + '">' +
+    '<svg class="xfm-icon nav-arrow" aria-hidden="true"><use xlink:href="#xfm-i-' +
+    (nested ? 'chevron-right' : 'chevron-down') + '"></use></svg></button>'
+  );
+
+  /** 桌面导航：输出一级 <li> 列表（不含外层 <ul>） */
+  register('xfm_nav_menu', function () {
+    const ctx = this;
+    const options = navOptions();
+    const items = navTree(ctx, options);
+    const itemClass = (item) =>
+      'nav-item' + (item.hasChildren ? ' has-children' : '') + (item.trail ? ' is-trail' : '');
+
+    const renderSub = (list) => list.map((item) => {
+      const inner = navIconHtml(item.icon) + '<span>' + escapeHTML(item.label) + '</span>';
+      let head;
+      if (item.hasChildren && item.path) {
+        // 有独立页面又有下级的项：链接照常跳转，右侧箭头单独负责展开
+        head = '<a class="nav-sub-link' + (item.active ? ' is-active' : '') + '" href="' + escapeHTML(item.href) + '"' +
+          navTarget(item) + ' aria-haspopup="true">' + inner + '</a>' + navCaretHtml(ctx, true);
+      } else if (item.hasChildren) {
+        head = '<button class="nav-sub-link nav-text nav-parent" type="button" aria-haspopup="true" aria-expanded="false">' +
+          inner + '<svg class="xfm-icon nav-arrow nav-arrow-right" aria-hidden="true"><use xlink:href="#xfm-i-chevron-right"></use></svg></button>';
+      } else {
+        head = '<a class="nav-sub-link' + (item.active ? ' is-active' : '') + '" href="' + escapeHTML(item.href) + '"' +
+          navTarget(item) + '>' + inner + '</a>';
+      }
+      const submenu = item.hasChildren
+        ? '<ul class="nav-submenu depth-' + (item.level + 1) + '">' + renderSub(item.children) + '</ul>'
+        : '';
+      return '<li class="' + itemClass(item) + '">' + head + submenu + '</li>';
+    }).join('');
+
+    const renderTop = (list) => list.map((item) => {
+      const inner = navIconHtml(item.icon) + '<span>' + escapeHTML(item.label) + '</span>';
+      let head;
+      if (item.hasChildren && item.path) {
+        head = '<a class="nav-link' + (item.active ? ' is-active' : '') + '" href="' + escapeHTML(item.href) + '"' +
+          navTarget(item) + ' aria-haspopup="true">' + inner + '</a>' + navCaretHtml(ctx, false);
+      } else if (item.hasChildren) {
+        head = '<button class="nav-link nav-text nav-parent" type="button" aria-haspopup="true" aria-expanded="false">' +
+          inner + '<svg class="xfm-icon nav-arrow" aria-hidden="true"><use xlink:href="#xfm-i-chevron-down"></use></svg></button>';
+      } else if (item.path) {
+        head = '<a class="nav-link' + (item.active ? ' is-active' : '') + '" href="' + escapeHTML(item.href) + '"' +
+          navTarget(item) + '>' + inner + '</a>';
+      } else {
+        // 既没有 path 也没有下级：只作为分组标题
+        head = '<span class="nav-link nav-text">' + inner + '</span>';
+      }
+      const submenu = item.hasChildren
+        ? '<ul class="nav-submenu depth-2">' + renderSub(item.children) + '</ul>'
+        : '';
+      return '<li class="' + itemClass(item) + '">' + head + submenu + '</li>';
+    }).join('');
+
+    return renderTop(items);
+  });
+
+  /** 窄屏抽屉：多级渲染成可折叠分组，或按 drawer_accordion: false 平铺 */
+  register('xfm_nav_drawer', function () {
+    const ctx = this;
+    const options = navOptions();
+    const items = navTree(ctx, options);
+    const inner = (item) => navIconHtml(item.icon) + '<span>' + escapeHTML(item.label) + '</span>';
+    const subClass = (item) => (item.level > 1 ? ' drawer-sub' : '');
+
+    if (!options.drawer_accordion) {
+      const flat = [];
+      const walk = (list) => list.forEach((item) => {
+        const attrs = ' class="drawer-link' + subClass(item) + (item.active ? ' is-active' : '') + '" data-depth="' + item.level + '"';
+        if (item.path) {
+          flat.push('<a' + attrs + ' href="' + escapeHTML(item.href) + '"' + navTarget(item) + '>' + inner(item) + '</a>');
+        } else if (item.hasChildren) {
+          flat.push('<span' + attrs + '>' + inner(item) + '</span>');
+        }
+        if (item.children.length) walk(item.children);
+      });
+      walk(items);
+      return flat.join('');
+    }
+
+    const walk = (list) => list.map((item) => {
+      const attrs = ' class="drawer-link' + subClass(item) + (item.level > 1 ? '' : '') + (item.active ? ' is-active' : '') + '" data-depth="' + item.level + '"';
+      const label = item.path
+        ? '<a' + attrs + ' href="' + escapeHTML(item.href) + '"' + navTarget(item) + '>' + inner(item) + '</a>'
+        : '<span' + attrs + '>' + inner(item) + '</span>';
+      if (!item.hasChildren) return label;
+      const toggle = '<button class="drawer-group-toggle" type="button" aria-expanded="false" aria-label="' +
+        escapeHTML(ctx.__('common.submenu')) + '">' +
+        '<svg class="xfm-icon nav-arrow" aria-hidden="true"><use xlink:href="#xfm-i-chevron-down"></use></svg></button>';
+      return '<div class="drawer-group' + (item.trail ? ' is-trail' : '') + '" data-depth="' + item.level + '">' +
+        '<div class="drawer-group-head">' + label + toggle + '</div>' +
+        '<div class="drawer-subnav" data-depth="' + (item.level + 1) + '" hidden>' + walk(item.children) + '</div>' +
+        '</div>';
+    }).join('');
+
+    return walk(items);
+  });
+
+  /** 菜单配置（depth / trigger / hover_delay / submenu_width）——模板用来写 data 属性 */
+  register('xfm_nav_config', function () {
+    return navOptions();
+  });
+
+  /** 菜单里是否已经有指向某个路径的入口（任意层级） */
+  register('xfm_nav_has', function (path) {
+    const target = normalizePath(path);
+    const walk = (list) => list.some((item) =>
+      (item.path && normalizePath(item.path) === target) ||
+      (item.children.length > 0 && walk(item.children)));
+    return walk(navTree(this, navOptions()));
+  });
+
   /** 文章正文目录 */
   register('xfm_toc', function (content, wrapperClass) {
     // toc_depth 是「要收录的层级列表」（如 [2,3,4]），取最小 / 最大当范围；
