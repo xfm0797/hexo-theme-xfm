@@ -37,7 +37,7 @@ XFM 是一套面向长期写作的 Hexo 主题：全套设计令牌驱动、深�
 | --- | --- |
 | 形态 | blog 卡片流 / notes 笔记树 / docs 三栏文档 |
 | 外观 | 深浅色三态切换（浅色、深色、跟随系统）、主色自定义、圆角档位、磨砂导航、背景光晕 |
-| 导航 | 两级下拉菜单、移动端抽屉、当前项高亮、滚动自动隐藏、RSS 入口 |
+| 导航 | 多级下拉菜单（最多 4 级，悬停 / 点击两种触发、键盘可达）、移动端抽屉、当前项与父级高亮、滚动自动隐藏、RSS 入口 |
 | 搜索 | 内置全文检索索引 + Cmd/Ctrl+K 唤起 + 键盘导航 + 关键词高亮 |
 | 目录 | 侧栏目录件 / 独立目录栏，滚动跟随高亮、自动滚入可见区 |
 | 代码块 | 语言标签、Mac 风格三色点、复制按钮、长代码折叠、gutter 行号、自研深浅色配色 |
@@ -323,6 +323,13 @@ sidebar:
   sticky: true        # 挂件总高超过一屏时建议设 false，否则底部挂件要滚到底才看得到
   widgets: [profile, recent_posts, categories, tagcloud, archive_list]
 
+nav:
+  depth: 3            # 最多渲染几级（1~4），超出自动退化成普通链接
+  trigger: hover      # hover 悬停展开 / click 点箭头展开（触屏一律点击）
+  hover_delay: 120    # hover 移出后的收起延迟（ms）
+  submenu_width: 190  # 子菜单最小宽度（px）
+  drawer_accordion: true  # 窄屏抽屉：true 折叠分组 / false 平铺缩进
+
 menu_order: [首页, 归档, 分类, 标签, 文档, 笔记, 更多]
   # 上一行留空 = 用配置里的书写顺序。Hexo 用 deepMerge 合并 theme_config，
   # 站点新增的菜单键总被追加到末尾，靠这里插回期望位置
@@ -512,7 +519,53 @@ window.XFM.lang.t('common.home')   // 取词条
 
 ---
 
-## 八、右下角悬浮按钮组
+## 八、多级导航菜单
+
+菜单写在 `menu` 里，每一级都用 `children` 往下挂，最多 4 级（一层 + 三层 children）；展开方式、层级上限由 `nav` 一节控制。
+
+```yaml
+menu:
+  文档:
+    path: /docs/         # 有 path 又有 children：点击跳转，右侧箭头单独负责展开
+    icon: file-doc
+    children:
+      入门:
+        icon: book       # 只有 children 没有 path：整项都是展开按钮
+        children:
+          安装:          # 第三级：从二级菜单右侧飞出，贴边自动翻转到左侧
+            path: /docs/install/
+      更新日志:
+        path: /changelog/
+
+nav:
+  depth: 3             # 最多渲染几级；超出的层级不渲染，父项退化成普通链接
+  trigger: hover       # hover = 悬停展开（默认）；click = 点箭头才展开
+  hover_delay: 120     # 移出后延迟收起，鼠标划过菜单边缘不会闪烁
+  submenu_width: 190   # 子菜单最小宽度
+  drawer_accordion: true
+```
+
+### 交互约定
+
+- **跳转与展开分离**：写了 `path` 的父项点击仍然跳转，展开只认右侧的箭头按钮；没写 `path` 的父项整个就是展开按钮。两种形态都带 `aria-expanded`，可 Tab 聚焦。
+- **键盘**：焦点在箭头 / 展开按钮上按 `↓` 进入子菜单；子菜单里 `↑` / `↓` 在同级移动，`→` 展开下一级，`←` 退回上一级，`Esc` 收起全部并把焦点还给触发按钮。
+- **贴边**：二级下拉默认在父项下方居中，靠右放不下时自动改为右对齐；三级及以下默认向右飞出，靠右时翻到左侧。
+- **位置提示**：当前页在某个子菜单里时，它的所有父级会带 `is-trail` 高亮，进阶路径一眼可见。
+
+### 窄屏抽屉
+
+手机 / 平板档导航收进抽屉，多级菜单默认渲染成**可折叠分组**：父项右侧是展开箭头，当前页所在的分组自动展开，展开一个分组时同级其它分组收起（手风琴）。
+
+```yaml
+nav:
+  drawer_accordion: false   # 改成平铺：父项与所有后代拉平成同级链接，仅按层级缩进
+```
+
+> 层级顺序说明：同一层的孩子按配置书写顺序排列；Hexo 用 deepMerge 合并 theme_config，站点新增的键会被追加到该层末尾，想精确控制就整层重写一遍（见 FAQ「站点新增的菜单项总排在更多之后」）。
+
+---
+
+## 九、右下角悬浮按钮组
 
 窄屏下侧栏收起为抽屉，需要有入口唤出；长文章看完也需要一键回顶。两者合并为固定右下角的按钮组，由 `floating` 一节统一控制。
 
@@ -550,7 +603,7 @@ floating:
 
 ---
 
-## 九、标签插件
+## 十、标签插件
 
 所有标签插件在 Markdown 正文中直接使用：
 
@@ -598,7 +651,7 @@ graph LR
 
 ---
 
-## 十、Front-matter 支持字段
+## 十一、Front-matter 支持字段
 
 ```yaml
 ---
@@ -624,7 +677,7 @@ order: 1                      # 笔记/文档模式排序权重
 
 ---
 
-## 十一、目录结构
+## 十二、目录结构
 
 ```
 themes/xfm
@@ -642,17 +695,17 @@ themes/xfm
 ├── scripts/
 │   ├── filters/content.js   # 代码块工具条、标题锚点、表格容器、外链、懒加载
 │   ├── generators/          # search.json、sitemap.xml、robots.txt、404
-│   ├── helpers/index.js     # 封面、摘要、字数、目录树、笔记/文档导航、计数、广告与语言
+│   ├── helpers/index.js     # 封面、摘要、字数、目录树、多级菜单、笔记/文档导航、计数、广告与语言
 │   └── tags/index.js        # 全部标签插件
 └── source/
     ├── css/                 # variables · base · layout · components · post · plugins · adaptive
-    ├── js/                  # adaptive · core · toc · search · i18n · ads
+    ├── js/                  # adaptive · core · nav · toc · search · i18n · ads
     └── images/              # avatar / favicon / 默认封面（SVG，零外链）
 ```
 
 ---
 
-## 十二、自定义
+## 十三、自定义
 
 **覆盖样式**：在站点 `source/_data/styles.styl` 之外，推荐直接把自定义 CSS/JS 放进主题后，通过配置注入：
 
@@ -671,13 +724,13 @@ custom:
 
 ---
 
-## 十三、浏览器支持
+## 十四、浏览器支持
 
 Chrome / Edge / Firefox / Safari 最近两个大版本。使用了 CSS 变量、`backdrop-filter`、`aspect-ratio`、`IntersectionObserver`；旧浏览器会优雅降级（失去磨砂与动画，不影响阅读）。
 
 ---
 
-## 十四、常见问题
+## 十五、常见问题
 
 ### 平台构建报 `ERR_REQUIRE_ESM`（strip-ansi）
 
@@ -731,6 +784,14 @@ Hexo 用 `deepMerge` 合并 `theme_config`，新增的键一律追加到末尾�
 
 v1.3.0 已修复。根因是语言选项按钮的属性名与 `<html data-lang>` 撞名：`i18n.js` 用 `target.closest('[data-lang]')` 判断语言选项，而 `closest()` 会沿祖先链一路爬到 `<html>` 命中，于是任意一次点击都走进 `preventDefault()` 分支，所有 `<a>` 的默认导航被吃掉。点按钮、点遮罩这类走 JS 处理的操作不受影响，所以只有链接看起来「坏」了。升级到 v1.3.0 即可，无需站点侧改动。
 
+### 父级菜单一点就跳走了，只想展开怎么办
+
+有 `path` 的父项点击就是跳转，展开只认右侧的箭头按钮（键盘用 `↓`）。如果站点不希望悬停展开、全部靠点击控制，设 `nav.trigger: click` —— 悬停不再展开，只有点箭头才开。
+
+### 子菜单在键盘上进不去
+
+先确认 `nav.depth` 没把层级截掉（被截断的父项没有箭头）。仍进不去时检查是否装了拦截 `keydown` 的站点脚本；主题内 ArrowDown / ArrowRight / Esc 的焦点管理都在 `nav.js`，真实浏览器验证过。
+
 ### 右下角没有目录按钮
 
 依次确认：
@@ -743,6 +804,6 @@ v1.3.0 已修复。根因是语言选项按钮的属性名与 `<html data-lang>`
 
 ---
 
-## 十五、许可
+## 十六、许可
 
 MIT License。
