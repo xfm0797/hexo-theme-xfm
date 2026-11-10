@@ -97,6 +97,7 @@
       else map[src] = dst;
     });
     var api = {
+      id: id,
       convert: function (text) {
         if (!text) return text;
         if (Object.prototype.hasOwnProperty.call(map, text)) return map[text];
@@ -119,11 +120,16 @@
   }
 
   function translateTree(root, conv) {
+    // 标记按「转换方向」记，而不是一次性布尔：
+    // 作用域容器存在嵌套（.site-header 里还有 .site-nav），同一节点会被走到两次，
+    // 需要跳过；但切回原语言时方向变了，必须重新处理 —— 早先写成永久标记，
+    // 结果是「中→英」之后再也切不回来。
+    var token = conv.id || 'once';
     var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
     var texts = [];
     while (walker.nextNode()) texts.push(walker.currentNode);
     texts.forEach(function (node) {
-      if (node.__xfmI18n) return;
+      if (node.__xfmI18n === token) return;
       var parent = node.parentNode;
       if (!parent) return;
       var tag = parent.nodeName;
@@ -131,14 +137,14 @@
       var raw = node.nodeValue;
       var trimmed = raw.trim();
       if (!trimmed) return;
-      node.__xfmI18n = 1;
+      node.__xfmI18n = token;
       var out = conv.convert(trimmed);
       if (out !== trimmed) node.nodeValue = raw.replace(trimmed, out);
     });
 
     eachAttrEl(root).forEach(function (el) {
-      if (el.__xfmI18nAttr) return;
-      el.__xfmI18nAttr = 1;
+      if (el.__xfmI18nAttr === token) return;
+      el.__xfmI18nAttr = token;
       ATTRS.forEach(function (attr) {
         var value = el.getAttribute(attr);
         if (!value) return;
