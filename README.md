@@ -417,6 +417,8 @@ adsense:
 
 每个广告单元只 push 一次（单元上会打 `data-xfm-ad-pushed="1"` 标记），重复 push 会被 AdSense 报错。
 
+`ads.js` 只服务于手动广告位的填充：**`slots` 全部留空（纯自动广告模式）时主题不加载 `ads.js`**，此时广告完全由 AdSense 自动布置，无需任何前端脚本配合。
+
 ### 合规与调试
 
 ```yaml

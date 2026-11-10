@@ -88,7 +88,8 @@
 <% if (theme.search && theme.search.enable !== false) { %>
 <script src="<%- url_for('/js/search.js') %>"></script>
 <% } %>
-<% if (__adsCfg.load_script) { %>
+<%# ads.js 只负责填充手动 <ins> 广告位；纯自动广告模式（slots 全空）没有可填充单元，不加载 %>
+<% if (__adsCfg.load_script && __adsCfg.has_slot) { %>
 <script src="<%- url_for('/js/ads.js') %>"></script>
 <% } %>
 
