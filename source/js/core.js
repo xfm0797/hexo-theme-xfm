@@ -243,9 +243,11 @@
 
   function onScroll() {
     var top = window.pageYOffset || docEl.scrollTop || 0;
-    var max = docEl.scrollHeight - window.innerHeight;
 
+    // 读 scrollHeight 会触发一次布局计算：进度条不存在的页面上
+    // 没必要时不时量文档高度（列表页 / 归档页都是这种情况）
     if (progressBar) {
+      var max = docEl.scrollHeight - window.innerHeight;
       var pct = max > 0 ? Math.min(100, (top / max) * 100) : 0;
       progressBar.style.width = pct.toFixed(2) + '%';
     }
