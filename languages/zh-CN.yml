@@ -82,10 +82,14 @@ comments:
   switch_theme: 切换评论主题
   enable_js: 评论功能需要启用 JavaScript
   none: 暂无评论
+  config_error: 评论配置不完整，请检查 themes 配置中的 comments 段
 
 footer:
   site_runtime: 本站已运行
   runtime_days: 天
+  runtime_hours: 时
+  runtime_minutes: 分
+  runtime_seconds: 秒
   statistics: 共 %s 篇文章 · 累计 %s 字
   total_posts: 文章数
   total_words: 总字数

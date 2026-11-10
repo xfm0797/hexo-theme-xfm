@@ -584,22 +584,56 @@
 
   /* ------------------------------------------------------------------ *
    * 页脚运行时长
+   * 单位文案走 window.XFM.i18n（切语言时由 i18n.js 刷新并派发
+   * xfm:langchange），避免英文页面出现硬编码的「天 时 分 秒」；
+   * 页面隐藏时停掉定时器，不在后台每秒唤醒。
    * ------------------------------------------------------------------ */
-  $$('[data-runtime]').forEach(function (el) {
-    var start = new Date(el.getAttribute('data-runtime') + 'T00:00:00');
-    var output = el.querySelector('.runtime-text');
-    if (isNaN(start.getTime()) || !output) return;
-    function tick() {
-      var diff = Date.now() - start.getTime();
-      var days = Math.floor(diff / 86400000);
-      var hours = Math.floor((diff % 86400000) / 3600000);
-      var mins = Math.floor((diff % 3600000) / 60000);
-      var secs = Math.floor((diff % 60000) / 1000);
-      output.textContent = days + ' 天 ' + hours + ' 时 ' + mins + ' 分 ' + secs + ' 秒';
+  (function () {
+    var items = $$('[data-runtime]').map(function (el) {
+      var start = new Date(el.getAttribute('data-runtime') + 'T00:00:00').getTime();
+      var output = el.querySelector('.runtime-text');
+      if (isNaN(start) || !output) return null;
+      return { start: start, output: output };
+    }).filter(Boolean);
+    if (!items.length) return;
+
+    function unit(key, fallback) {
+      return I18N[key] || fallback;
     }
-    tick();
-    setInterval(tick, 1000);
-  });
+
+    function render() {
+      var now = Date.now();
+      var dUnit = unit('runtimeDays', '天');
+      var hUnit = unit('runtimeHours', '时');
+      var mUnit = unit('runtimeMinutes', '分');
+      var sUnit = unit('runtimeSeconds', '秒');
+      items.forEach(function (item) {
+        var diff = Math.max(0, now - item.start);
+        item.output.textContent =
+          Math.floor(diff / 86400000) + ' ' + dUnit + ' ' +
+          Math.floor((diff % 86400000) / 3600000) + ' ' + hUnit + ' ' +
+          Math.floor((diff % 3600000) / 60000) + ' ' + mUnit + ' ' +
+          Math.floor((diff % 60000) / 1000) + ' ' + sUnit;
+      });
+    }
+
+    var runtimeTimer = null;
+    function startRuntime() {
+      if (!runtimeTimer) runtimeTimer = setInterval(render, 1000);
+    }
+    function stopRuntime() {
+      if (runtimeTimer) { clearInterval(runtimeTimer); runtimeTimer = null; }
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) stopRuntime();
+      else { render(); startRuntime(); }
+    });
+    document.addEventListener('xfm:langchange', render);
+
+    render();
+    if (!document.hidden) startRuntime();
+  })();
 
   /* ------------------------------------------------------------------ *
    * 评论系统
@@ -748,7 +782,7 @@
     var ok = renderer(box, conf.opts || {});
     if (!ok) {
       box.innerHTML = '<div class="comment-placeholder"><span>' +
-        (I18N.searchError || '配置不完整，请检查评论区配置') + '</span></div>';
+        (I18N.commentConfigError || '配置不完整，请检查评论区配置') + '</span></div>';
     }
   }
 

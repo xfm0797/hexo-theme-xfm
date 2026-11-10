@@ -81,10 +81,14 @@ comments:
   switch_theme: Toggle comment theme
   enable_js: Please enable JavaScript to view comments
   none: No comments yet
+  config_error: Comment config is incomplete, check the comments section in your theme config
 
 footer:
   site_runtime: Running for
   runtime_days: days
+  runtime_hours: hrs
+  runtime_minutes: min
+  runtime_seconds: sec
   statistics: '%s posts · %s words'
   total_posts: Posts
   total_words: Words

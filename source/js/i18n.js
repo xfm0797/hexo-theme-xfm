@@ -44,7 +44,12 @@
     inContent: 'search.in_content',
     inTag: 'search.in_tag',
     docsNav: 'docs.sidebar',
-    notesNav: 'notes.sidebar'
+    notesNav: 'notes.sidebar',
+    commentConfigError: 'comments.config_error',
+    runtimeDays: 'footer.runtime_days',
+    runtimeHours: 'footer.runtime_hours',
+    runtimeMinutes: 'footer.runtime_minutes',
+    runtimeSeconds: 'footer.runtime_seconds'
   };
 
   var PLACEHOLDER_SPLIT = /(%[sd]|\{[a-zA-Z0-9_]+\})/g;
