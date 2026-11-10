@@ -38,15 +38,19 @@
   });
 
   var ids = Object.keys(linkMap);
+  // 标题元素缓存：滚动帧里不再每帧逐个 getElementById
+  var headings = ids.map(function (id) { return document.getElementById(id); });
 
+  var activeLinks = [];
   function setActive(id) {
-    ids.forEach(function (key) {
-      var active = key === id;
-      linkMap[key].forEach(function (link) {
-        link.classList.toggle('is-active', active);
-        if (active) scrollIntoView(link);
-      });
+    activeLinks.forEach(function (link) { link.classList.remove('is-active'); });
+    activeLinks = linkMap[id] || [];
+    var first = null;
+    activeLinks.forEach(function (link) {
+      link.classList.add('is-active');
+      if (!first) first = link;
     });
+    if (first) scrollIntoView(first);
   }
 
   // 保证高亮项在目录容器内可见
@@ -75,11 +79,10 @@
     var line = navHeight + 40;
     var active = '';
 
-    for (var i = 0; i < ids.length; i++) {
-      var el = document.getElementById(ids[i]);
+    for (var i = 0; i < headings.length; i++) {
+      var el = headings[i];
       if (!el) continue;
-      var rect = el.getBoundingClientRect();
-      if (rect.top <= line) active = ids[i];
+      if (el.getBoundingClientRect().top <= line) active = ids[i];
       else break;
     }
 
