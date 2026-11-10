@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const escapeHTML = (str) =>
   String(str == null ? '' : str).replace(/[&<>"']/g, (c) => ({
@@ -264,6 +265,23 @@ function loadLangTable(hexo, code) {
     }
   }
   return {};
+}
+
+/**
+ * 语言字典外置包：整份 tables 逐页内联约 7KB（gzip 后 2.9KB），
+ * 且各页面内容完全一致 —— 改为构建期生成 /js/lang-data.js，靠 hash 查询串
+ * 做缓存失效，首屏定档仍由 lang-boot 内联的元数据同步完成。
+ * 这里做进程级 memo，保证模板里的 ?v= 与 generator 产出的内容永远同源。
+ */
+const LANG_BUNDLE = { key: '', json: '', hash: '' };
+function langBundle(langs, tables) {
+  const key = langs.map((l) => l.code).join(',');
+  if (LANG_BUNDLE.key === key && LANG_BUNDLE.json) return LANG_BUNDLE;
+  const json = JSON.stringify(tables || {});
+  LANG_BUNDLE.key = key;
+  LANG_BUNDLE.json = json;
+  LANG_BUNDLE.hash = crypto.createHash('md5').update(json).digest('hex').slice(0, 8);
+  return LANG_BUNDLE;
 }
 
 /** 解析 languages 配置：数组 [{code,name,short}] 或对象 { 'zh-CN': { name, short } } */
@@ -1056,11 +1074,15 @@ module.exports = function (hexo) {
         tables[l.code] = loadLangTable(hexo, l.code);
       });
     }
+    // data_json / data_hash 供 /js/lang-data.js 生成器与 <script src="…?v="> 共用
+    const bundle = enable ? langBundle(langs, tables) : { json: '', hash: '' };
     return {
       enable: enable,
       current: current,
       languages: langs,
       tables: tables,
+      data_json: bundle.json,
+      data_hash: bundle.hash,
       style: cfg.style === 'menu' || cfg.style === 'toggle' ? cfg.style : 'auto',
       position: cfg.position === 'menu' ? 'menu' : 'tools',
       remember: cfg.remember !== false,

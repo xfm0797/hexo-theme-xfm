@@ -461,8 +461,8 @@ window.XFM.ads                                         // 当前广告配置快�
 
 ### 工作原理
 
-1. **构建期**：把 `languages/*.yml` 全部语言包拍平成点号路径（`common.home` → `首页 / Home`），内联进 `<head>` 的 `window.__XFM_LANG__`。
-2. **首屏前**：`lang-boot` 脚本在 `<head>` 中同步执行——先读 URL 的 `?__lang=`，再读本地记忆，决定用哪种语言，写好 `<html data-lang>` 与 `lang` 属性。这一步在渲染前完成，避免中英文案闪一下再切换。
+1. **构建期**：把 `languages/*.yml` 全部语言包拍平成点号路径（`common.home` → `首页 / Home`）。`<head>` 里只内联语言清单与当前语言等**元数据**（几百字节）；整份字典约 7KB、各页完全相同，构建时单独生成 `/js/lang-data.js`，页面用 `<script src="/js/lang-data.js?v=<hash>">` 引用，**浏览器整站只下载一次**，改语言包后 hash 变化自动失效。
+2. **首屏前**：`lang-boot` 脚本在 `<head>` 中同步执行——先读 URL 的 `?__lang=`，再读本地记忆，决定用哪种语言，写好 `<html data-lang>` 与 `lang` 属性。这一步在渲染前完成，避免中英文案闪一下再切换（字典文件在 body 末尾、`i18n.js` 之前加载，不影响这一步）。
 3. **渲染后**：`i18n.js` 遍历界面元素（导航 / 按钮 / 侧栏 / 分页 / 页脚 / 搜索框等白名单容器），按「当前文案 → 目标文案」映射替换文本与 `placeholder` / `title` / `aria-label` / `alt` 等属性。
 
 ### 为什么正文不翻译

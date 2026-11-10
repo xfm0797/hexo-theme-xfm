@@ -1,10 +1,12 @@
 <%
   /*
    * 多语言定档（首屏同步执行）
-   * 1) 把各语言的全量扁平字典交给前端（切换时做「当前文案 → 目标文案」反查替换）
+   * 1) 建立 window.__XFM_LANG__ 骨架（语言清单等元数据，体积很小）
    * 2) 立刻按 localStorage 里记住的语言改写 <html lang> / data-lang，
    *    这样前端脚本、无障碍与 SEO 读到的语言和最终渲染一致
    * 放在 <head> 里，避免先渲染中文再整体替换造成的闪烁。
+   * 说明：全量字典约 7KB/页、各页完全相同，已外置成 /js/lang-data.js
+   *      （body 末尾、i18n.js 之前加载，带 hash 查询串），这里不再内联。
    */
   const L = xfm_lang();
 %>
@@ -15,8 +17,7 @@
     current: L.current,
     remember: L.remember,
     update_html_lang: L.update_html_lang,
-    languages: L.languages.map(function (l) { return { code: l.code, name: l.name, short: l.short }; }),
-    tables: L.tables
+    languages: L.languages.map(function (l) { return { code: l.code, name: l.name, short: l.short }; })
   }) %>;
   window.__XFM_LANG__ = CFG;
   var R = document.documentElement;

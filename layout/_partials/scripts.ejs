@@ -78,6 +78,8 @@
 
 <script src="<%- url_for('/js/adaptive.js') %>"></script>
 <% if (__langCfg.enable) { %>
+<%# 全量语言字典外置：各页内容一致，浏览器只下载一次；hash 查询串负责缓存失效 %>
+<script src="<%- url_for('/js/lang-data.js') %>?v=<%= __langCfg.data_hash %>"></script>
 <script src="<%- url_for('/js/i18n.js') %>"></script>
 <% } %>
 <script src="<%- url_for('/js/core.js') %>"></script>
